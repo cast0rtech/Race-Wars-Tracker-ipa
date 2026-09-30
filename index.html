@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Race Wars Tracker - Cockpit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="core/pro-paywall.css">
+  <link rel="stylesheet" href="core/ad-manager.css">
+  <link rel="stylesheet" href="core/bluetooth-menu.css">
+  <link rel="stylesheet" href="core/permissions-modal.css">
+</head>
+<body>
+  <div class="viewport-wrapper">
+    <main class="cockpit-container" id="cockpit">
+      <!-- Dark Carbon / Asphault Backdrop -->
+      <div class="carbon-bg"></div>
+      <div class="ambient-glow" id="ambientGlow"></div>
+
+      <!-- 1. Header Superior: Indicador Bluetooth & Telemetría Meta -->
+      <header class="top-hud">
+        <div class="app-identity">
+          <span class="app-brand">RACE WARS</span>
+          <span class="app-tag">TRACKER</span>
+        </div>
+
+        <!-- Indicador de conexión Bluetooth (activo / inactivo interactivo) -->
+        <button class="bt-status-pill connected" id="btStatusBtn" title="Alternar estado Bluetooth" aria-label="Estado Bluetooth">
+          <div class="bt-icon-wrapper">
+            <svg class="bt-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+            </svg>
+            <span class="bt-beacon"></span>
+          </div>
+          <div class="bt-info">
+            <span class="bt-label">BLUETOOTH</span>
+            <span class="bt-state-text" id="btStateText">CONECTADO</span>
+          </div>
+        </button>
+
+        <div class="hud-profile-mode">
+          <!-- Botón de Estado Freemium / PRO -->
+          <button class="pro-status-pill is-free" id="proStatusBtn" title="Ver suscripción Race Wars Pro" aria-label="Estado Race Wars Pro">
+            <span>★</span>
+            <span id="proStatusText">FREE</span>
+          </button>
+          <span class="status-chip live-chip" id="recStatusChip">STANDBY</span>
+        </div>
+      </header>
+
+      <!-- 2 & 4. Zona Central: Velocímetro Digital y Tres Tarjetas Alrededor -->
+      <section class="cluster-zone">
+        <!-- Tarjetas Superiores Flanqueando / Alrededor del Velocímetro -->
+        <div class="metrics-satellite-grid">
+          <!-- Tarjeta 1: Distancia (km) -->
+          <div class="metric-card" id="cardDistance">
+            <div class="card-icon-tag">
+              <span class="card-dot"></span>
+              <span class="card-title">DISTANCIA</span>
+            </div>
+            <div class="metric-value-box">
+              <span class="metric-num" id="distanceVal">0.00</span>
+              <span class="metric-unit">KM</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="bar-fill" id="distBarFill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Tarjeta 2: Tiempo Transcurrido -->
+          <div class="metric-card" id="cardTime">
+            <div class="card-icon-tag">
+              <span class="card-dot"></span>
+              <span class="card-title">TIEMPO</span>
+            </div>
+            <div class="metric-value-box">
+              <span class="metric-num font-mono" id="timeVal">00:00<small>.0</small></span>
+              <span class="metric-unit">REC</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="bar-fill bar-fill-time" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Tarjeta 3: Desnivel Positivo (+D) -->
+          <div class="metric-card" id="cardElevation">
+            <div class="card-icon-tag">
+              <span class="card-dot dot-lime"></span>
+              <span class="card-title">DESNIVEL POSITIVO</span>
+            </div>
+            <div class="metric-value-box">
+              <span class="metric-num text-lime" id="elevGainVal">+0</span>
+              <span class="metric-unit">+D (M)</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="bar-fill bar-fill-lime" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Velocímetro Digital Central de Gran Tamaño -->
+        <div class="speedometer-centerpiece">
+          <div class="gauge-arc-track">
+            <svg class="speed-radial-svg" viewBox="0 0 340 190">
+              <defs>
+                <linearGradient id="speedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#39ff14" />
+                  <stop offset="65%" stop-color="#ffdd00" />
+                  <stop offset="100%" stop-color="#ff1e44" />
+                </linearGradient>
+              </defs>
+              <path class="radial-bg" d="M 40 170 A 130 130 0 1 1 300 170" fill="none" />
+              <path class="radial-active" id="speedRadialActive" d="M 40 170 A 130 130 0 1 1 300 170" fill="none" />
+            </svg>
+            <div class="speed-ticks">
+              <span>0</span>
+              <span>60</span>
+              <span>120</span>
+              <span>180</span>
+              <span>240</span>
+            </div>
+          </div>
+
+          <div class="speedometer-readout">
+            <div class="speed-header-label">VELOCIDAD GPS</div>
+            <div class="speed-digits-mono" id="mainSpeed">0</div>
+            <div class="speed-unit-sub">
+              <span class="unit-main">KM/H</span>
+              <span class="speed-max-tag">MAX: <b id="maxSpeedTag">0</b></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Gráfico de Altimetría Minimalista en Tiempo Real (Parte Inferior) -->
+      <section class="altimetry-section">
+        <div class="altimetry-header">
+          <div class="alt-title-group">
+            <span class="alt-icon">⛰️</span>
+            <span class="alt-title">PERFIL DE ALTIMETRÍA EN TIEMPO REAL</span>
+          </div>
+          <div class="alt-current-badge">
+            <span class="alt-curr-lbl">COTA ACTUAL:</span>
+            <span class="alt-curr-val" id="currentAlt">-- m</span>
+          </div>
+        </div>
+        <div class="altimetry-canvas-container">
+          <canvas id="altimetryCanvas" width="380" height="96"></canvas>
+          <div class="alt-grid-lines">
+            <span class="alt-grid-label max" id="altMaxLbl">920m</span>
+            <span class="alt-grid-label min" id="altMinLbl">760m</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Botón Principal Grande para "Anulación Manual" (Start / Stop) -->
+      <section class="manual-override-section">
+        <button class="manual-override-btn" id="overrideBtn" aria-label="Anulación Manual Start Stop">
+          <div class="btn-outer-scanner"></div>
+          <div class="btn-hazard-stripe"></div>
+          <div class="btn-inner-core">
+            <div class="override-icon-row">
+              <svg class="override-power-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+              </svg>
+              <span class="override-sub">MANUAL OVERRIDE</span>
+            </div>
+            <span class="override-main-text" id="overrideText">START ROUTE</span>
+            <span class="override-prompt-caption" id="overrideSub">PULSAR PARA REGISTRO</span>
+          </div>
+        </button>
+
+        <!-- Toggle Auxiliar para Simulación / Demostración -->
+        <div class="demo-bar">
+          <button class="ghost-toggle" id="themeToggle">Tema: Neón Verde <span class="pro-lock-badge" id="themeProBadge">PRO</span></button>
+          <button class="ghost-toggle text-lime" id="simToggle">Modo: GPS REAL</button>
+          <button class="ghost-toggle text-lime" id="gpxReplayBtn">▶ Inyectar GPX Real (Navacerrada 42km)</button>
+          <a href="summary.html" class="ghost-toggle" style="text-decoration: none;">Ver Pantalla 3 ➔</a>
+        </div>
+
+        <!-- Banner Publicitario AdMob (Modo Gratuito) -->
+        <div class="admob-free-banner" id="admobBanner">
+          <div class="admob-banner-text">
+            <span class="admob-ad-tag">ANUNCIO</span>
+            <span>Michelin Pilot Sport 4S • Adherencia en curva límite</span>
+          </div>
+          <button class="admob-unlock-link" id="admobUnlockBtn">Quitar Anuncios (PRO)</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="core/sensor-fusion.js"></script>
+  <script src="core/real-telemetry.js"></script>
+  <script src="core/gpx-replay-engine.js"></script>
+  <script src="core/ad-manager.js"></script>
+  <script src="core/pro-manager.js"></script>
+  <script src="core/pro-paywall.js"></script>
+  <script src="core/bluetooth-menu.js"></script>
+  <script src="core/permissions-modal.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

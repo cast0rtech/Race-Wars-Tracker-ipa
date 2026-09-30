@@ -1,0 +1,409 @@
+// Race Wars Tracker - Real Telemetry & Cockpit Engine
+document.addEventListener('DOMContentLoaded', () => {
+  // DOM Elements - 1. Bluetooth
+  const btStatusBtn = document.getElementById('btStatusBtn');
+  const btStateText = document.getElementById('btStateText');
+  let isBtConnected = true;
+
+  // DOM Elements - 2. Speedometer
+  const mainSpeed = document.getElementById('mainSpeed');
+  const maxSpeedTag = document.getElementById('maxSpeedTag');
+  const speedRadialActive = document.getElementById('speedRadialActive');
+
+  // DOM Elements - 3. Altimetry
+  const altCanvas = document.getElementById('altimetryCanvas');
+  const currentAlt = document.getElementById('currentAlt');
+  const altMaxLbl = document.getElementById('altMaxLbl');
+  const altMinLbl = document.getElementById('altMinLbl');
+  const ctx = altCanvas.getContext('2d');
+
+  // DOM Elements - 4. Three Satellite Cards
+  const distanceVal = document.getElementById('distanceVal');
+  const timeVal = document.getElementById('timeVal');
+  const elevGainVal = document.getElementById('elevGainVal');
+  const distBarFill = document.getElementById('distBarFill');
+
+  // DOM Elements - 5. Manual Override Button
+  const overrideBtn = document.getElementById('overrideBtn');
+  const overrideText = document.getElementById('overrideText');
+  const overrideSub = document.getElementById('overrideSub');
+  const recStatusChip = document.getElementById('recStatusChip');
+
+  // Aux controls & PRO integration
+  const simToggle = document.getElementById('simToggle');
+  const themeToggle = document.getElementById('themeToggle');
+  const proStatusBtn = document.getElementById('proStatusBtn');
+  const proStatusText = document.getElementById('proStatusText');
+  const themeProBadge = document.getElementById('themeProBadge');
+  const gpxReplayBtn = document.getElementById('gpxReplayBtn');
+
+  // Haptic Feedback Helper
+  function triggerHaptic(ms = 50) {
+    if (navigator.vibrate) {
+      navigator.vibrate(ms);
+    }
+  }
+
+  // Radial Gauge Calculation (0 - 240 KM/H)
+  const maxDashOffset = 480;
+  const minDashOffset = 150;
+  function updateSpeedGauge(spd) {
+    const clamped = Math.max(0, Math.min(240, spd));
+    const ratio = clamped / 240;
+    const offset = maxDashOffset - (ratio * (maxDashOffset - minDashOffset));
+    speedRadialActive.style.strokeDashoffset = offset;
+  }
+
+  // Format Elapsed Time (MM:SS.d)
+  function formatTime(ms) {
+    const totalSecs = Math.floor(ms / 1000);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    const tenths = Math.floor((ms % 1000) / 100);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}<small>.${tenths}</small>`;
+  }
+
+  // 0. FREEMIUM / PRO UI SYNCHRONIZATION
+  const admobBanner = document.getElementById('admobBanner');
+  const admobUnlockBtn = document.getElementById('admobUnlockBtn');
+
+  function updateProUI() {
+    if (!window.ProManager) return;
+    const isPro = window.ProManager.isPro();
+    if (proStatusBtn && proStatusText) {
+      if (isPro) {
+        proStatusBtn.className = 'pro-status-pill is-pro';
+        proStatusText.textContent = `PRO (${window.ProManager.getRemainingProTime()})`;
+        if (themeProBadge) themeProBadge.style.display = 'none';
+        if (admobBanner) admobBanner.style.display = 'none';
+      } else {
+        proStatusBtn.className = 'pro-status-pill is-free';
+        proStatusText.textContent = 'FREE';
+        if (themeProBadge) themeProBadge.style.display = 'inline-flex';
+        if (admobBanner) admobBanner.style.display = 'flex';
+      }
+    }
+  }
+
+  if (admobUnlockBtn) {
+    admobUnlockBtn.addEventListener('click', () => {
+      if (window.ProManager) {
+        window.ProManager.openPaywall('Elimina los anuncios y desbloquea el modo VIP viendo un vídeo bonificado');
+      }
+    });
+  }
+
+  if (proStatusBtn) {
+    proStatusBtn.addEventListener('click', () => {
+      if (window.ProManager) {
+        window.ProManager.openPaywall('Desbloquea funciones de competición gratis con anuncios');
+      }
+    });
+  }
+
+  window.addEventListener('racewars:pro_status_changed', () => {
+    updateProUI();
+    drawAltimetryGraph();
+  });
+  updateProUI();
+
+  // THEME TOGGLE (PRO EXCLUSIVE FEATURE)
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const isPro = window.ProManager ? window.ProManager.isPro() : false;
+      if (!isPro) {
+        if (window.ProManager) {
+          window.ProManager.openPaywall('Desbloquea el tema exclusivo Racing Red con Race Wars PRO');
+        }
+        return;
+      }
+      const isRed = document.body.classList.toggle('theme-racing-red');
+      themeToggle.innerHTML = isRed ? 'Tema: Racing Red' : 'Tema: Neón Verde';
+      drawAltimetryGraph();
+      triggerHaptic(60);
+    });
+  }
+
+  // 1. GESTIÓN Y MENÚ DE BLUETOOTH DEL COCKPIT
+  btStatusBtn.addEventListener('click', () => {
+    triggerHaptic(40);
+    if (window.BluetoothMenu) {
+      window.BluetoothMenu.open();
+    }
+  });
+
+  window.addEventListener('racewars:bluetooth_changed', (e) => {
+    const btSettings = e.detail;
+    isBtConnected = btSettings.isConnected;
+    if (isBtConnected) {
+      btStatusBtn.classList.remove('disconnected');
+      btStatusBtn.classList.add('connected');
+      btStateText.textContent = btSettings.selectedDevice ? btSettings.selectedDevice.substring(0, 12).toUpperCase() : 'CONECTADO';
+
+      // Auto-inicio de ruta si el coche se conecta y está configurado
+      if (btSettings.autoRecord && !telemetry.isRecording) {
+        telemetry.startRecording();
+        overrideBtn.classList.add('active-rec');
+        overrideText.textContent = 'STOP RECORDING';
+        overrideSub.textContent = `AUTO-ARRANQUE (${btSettings.selectedDevice})`;
+        recStatusChip.classList.add('active-recording');
+        recStatusChip.textContent = 'LIVE REC';
+        if (window.ProPaywallModal) {
+          window.ProPaywallModal.showToast(`⚡ Coche detectado (${btSettings.selectedDevice}): Grabación iniciada automáticamente.`);
+        }
+      }
+    } else {
+      btStatusBtn.classList.remove('connected');
+      btStatusBtn.classList.add('disconnected');
+      btStateText.textContent = 'INACTIVO';
+    }
+  });
+
+  // Tocar el chip de estado GPS abre el gestor de permisos y sensores
+  recStatusChip.addEventListener('click', () => {
+    if (window.PermissionsModal) {
+      window.PermissionsModal.open();
+    }
+  });
+
+  // 2. INICIALIZAR MOTOR DE TELEMETRÍA DE HARDWARE REAL (GPS)
+  const telemetry = new window.RealTelemetryEngine();
+
+  // Escuchar estado del sensor GPS (Buscando / Activo / Error)
+  telemetry.onStatusChange(({ text, state }) => {
+    if (!telemetry.isRecording) {
+      recStatusChip.textContent = text;
+      if (state === 'active') {
+        recStatusChip.style.color = 'var(--neon-lime)';
+      } else if (state === 'searching') {
+        recStatusChip.style.color = 'var(--neon-yellow)';
+      } else {
+        recStatusChip.style.color = 'var(--neon-red)';
+      }
+    }
+  });
+
+  // Actualización de la UI con datos REALES de los sensores
+  telemetry.onUpdate((data) => {
+    // 1. Velocímetro Real
+    mainSpeed.textContent = data.speed;
+    updateSpeedGauge(data.speed);
+    maxSpeedTag.textContent = data.maxSpeed;
+
+    // 2. Distancia y Tiempo Real
+    distanceVal.textContent = data.distanceKm.toFixed(2);
+    timeVal.innerHTML = formatTime(data.elapsedMs);
+    const progressTarget = Math.max(10, data.distanceKm + 5);
+    distBarFill.style.width = `${Math.min(100, (data.distanceKm / progressTarget) * 100)}%`;
+
+    // 3. Altitud y Desnivel Real
+    currentAlt.textContent = `${data.currentAltitude} m`;
+    elevGainVal.textContent = `+${data.elevationGain}`;
+
+    // 4. Gráfico de Altimetría en vivo
+    drawAltimetryGraph(data.altHistory);
+  });
+
+  // 3. DIBUJAR PERFIL DE ALTIMETRÍA EN CANVAS
+  function drawAltimetryGraph(history = telemetry.altHistory) {
+    const width = altCanvas.width;
+    const height = altCanvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const safeHistory = (history && history.length >= 2) ? history : [600, 600];
+    const minAlt = Math.min(...safeHistory) - 10;
+    const maxAlt = Math.max(...safeHistory) + 10;
+    const altRange = Math.max(15, maxAlt - minAlt);
+
+    // Update labels
+    altMinLbl.textContent = `${Math.round(minAlt + 10)}m`;
+    altMaxLbl.textContent = `${Math.round(maxAlt - 10)}m`;
+
+    // Horizontal guideline
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, height / 2);
+    ctx.lineTo(width, height / 2);
+    ctx.stroke();
+
+    // Map points to canvas coordinates
+    const stepX = width / (safeHistory.length - 1);
+    const points = safeHistory.map((val, idx) => {
+      const x = idx * stepX;
+      const normalized = (val - minAlt) / altRange;
+      const y = height - (normalized * (height - 18)) - 8;
+      return { x, y };
+    });
+
+    const isRedTheme = document.body.classList.contains('theme-racing-red');
+    const accentColor = isRedTheme ? '#ff1e44' : '#39ff14';
+
+    // 1. Fill Gradient below line
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, isRedTheme ? 'rgba(255, 30, 68, 0.35)' : 'rgba(57, 255, 20, 0.35)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, height);
+    ctx.lineTo(points[0].x, points[0].y);
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const xc = (points[i].x + points[i + 1].x) / 2;
+      const yc = (points[i].y + points[i + 1].y) / 2;
+      ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+    }
+    ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+    ctx.lineTo(points[points.length - 1].x, height);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 2. Stroke Glowing Line
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 0; i < points.length - 1; i++) {
+      const xc = (points[i].x + points[i + 1].x) / 2;
+      const yc = (points[i].y + points[i + 1].y) / 2;
+      ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+    }
+    ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = accentColor;
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // 3. Highlight Last Point (Current Vehicle Location)
+    const lastP = points[points.length - 1];
+    ctx.beginPath();
+    ctx.arc(lastP.x, lastP.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = accentColor;
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // 4. BOTÓN MANUAL OVERRIDE (START / STOP RECORDING)
+  overrideBtn.addEventListener('click', () => {
+    triggerHaptic(75);
+
+    if (!telemetry.isRecording) {
+      // Iniciar grabación real
+      telemetry.startRecording();
+      overrideBtn.classList.add('active-rec');
+      overrideText.textContent = 'STOP RECORDING';
+      overrideSub.textContent = 'GRABANDO GPS • TOCAR PARA DETENER';
+      recStatusChip.classList.add('active-recording');
+      recStatusChip.textContent = 'LIVE REC';
+      recStatusChip.style.color = '#ffffff';
+    } else {
+      // Detener grabación real y guardar sesión
+      const session = telemetry.stopRecording();
+      overrideBtn.classList.remove('active-rec');
+      overrideText.textContent = 'START ROUTE';
+      overrideSub.textContent = 'PULSAR PARA REGISTRO';
+      recStatusChip.classList.remove('active-recording');
+      recStatusChip.textContent = 'STANDBY';
+      recStatusChip.style.color = 'var(--neon-lime)';
+
+      if (window.ProPaywallModal) {
+        window.ProPaywallModal.showToast(`✓ Ruta de ${session.distanceKm} km guardada con éxito. Consulta el resumen.`);
+      }
+    }
+  });
+
+  // 5. MODO SIMULACIÓN MANUAL (OPCIONAL PARA PROBAR EN ESTÁTICO)
+  let simInterval = null;
+  let simSpeed = 110;
+  let simAlt = 720;
+  let simDist = 0;
+  let simElapsed = 0;
+
+  simToggle.addEventListener('click', () => {
+    const isNowSim = !telemetry.isSimulating;
+    telemetry.setSimulation(isNowSim);
+
+    if (isNowSim) {
+      simToggle.textContent = 'Modo: Simulación (Demo)';
+      simToggle.classList.remove('text-lime');
+      simToggle.style.color = 'var(--neon-yellow)';
+      recStatusChip.textContent = 'SIMULADOR DEMO';
+
+      simInterval = setInterval(() => {
+        simSpeed = Math.min(220, Math.max(40, simSpeed + (Math.random() - 0.48) * 8));
+        simAlt += (Math.random() - 0.45) * 2;
+        simDist += (simSpeed / 3600) * 0.1;
+        simElapsed += 100;
+
+        mainSpeed.textContent = Math.round(simSpeed);
+        updateSpeedGauge(simSpeed);
+        distanceVal.textContent = simDist.toFixed(2);
+        timeVal.innerHTML = formatTime(simElapsed);
+        currentAlt.textContent = `${Math.round(simAlt)} m`;
+        elevGainVal.textContent = `+${Math.round(simDist * 22)}`;
+
+        if (telemetry.altHistory.length > 0) {
+          telemetry.altHistory.shift();
+          telemetry.altHistory.push(Math.round(simAlt));
+          drawAltimetryGraph();
+        }
+      }, 100);
+    } else {
+      if (simInterval) clearInterval(simInterval);
+      simInterval = null;
+      simToggle.textContent = 'Modo: GPS REAL';
+      simToggle.classList.add('text-lime');
+      simToggle.style.color = 'var(--neon-lime)';
+      recStatusChip.textContent = 'CONECTANDO GPS...';
+      telemetry.startHardwareGps();
+    }
+  });
+
+  // 6. INYECCIÓN GPX DE DEMOSTRACIÓN (PUERTO DE NAVACERRADA)
+  if (gpxReplayBtn && window.GPXReplayEngine && window.SensorFusionEngine) {
+    const replayEngine = new window.GPXReplayEngine({ speedMultiplier: 8.0 });
+    const fusionEngine = new window.SensorFusionEngine({ hysteresisThreshold: 3.0 });
+
+    replayEngine.onLocationUpdate((sample) => {
+      const fusion = fusionEngine.update({
+        timestamp: sample.timestamp,
+        gpsAltitude: sample.altitude,
+        gpsAccuracyV: sample.accuracyV,
+        baroPressureHpa: sample.barometerHpa
+      });
+
+      mainSpeed.textContent = sample.speedKmh;
+      updateSpeedGauge(sample.speedKmh);
+      currentAlt.textContent = `${Math.round(fusion.fusedAltitude)} m`;
+      elevGainVal.textContent = `+${fusion.elevationGain}`;
+      distanceVal.textContent = sample.distanceKm.toFixed(2);
+
+      telemetry.altHistory.shift();
+      telemetry.altHistory.push(Math.round(fusion.fusedAltitude));
+      drawAltimetryGraph();
+    });
+
+    gpxReplayBtn.addEventListener('click', () => {
+      if (replayEngine.isPlaying) {
+        replayEngine.stopReplay();
+        gpxReplayBtn.textContent = '▶ Inyectar GPX Real (Navacerrada 42km)';
+        gpxReplayBtn.style.color = 'var(--neon-lime)';
+        telemetry.setSimulation(false);
+      } else {
+        telemetry.setSimulation(true);
+        if (simInterval) clearInterval(simInterval);
+        replayEngine.startReplay(8.0);
+        gpxReplayBtn.textContent = '⏸ Pausar Replay GPX (8x)';
+        gpxReplayBtn.style.color = 'var(--neon-yellow)';
+        simToggle.textContent = 'Modo: GPX Replay';
+      }
+    });
+  }
+
+  // Render inicial en reposo (0 km/h, esperando GPS)
+  updateSpeedGauge(0);
+  drawAltimetryGraph([500, 500]);
+});

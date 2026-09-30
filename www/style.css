@@ -1,0 +1,840 @@
+:root {
+  /* Racing Dark Theme Tokens */
+  --bg-deep: #06080b;
+  --bg-surface: #0c1017;
+  --bg-card: rgba(16, 22, 32, 0.75);
+  --bg-card-border: rgba(255, 255, 255, 0.08);
+
+  /* High-Contrast Neon Highlights */
+  --neon-lime: #39ff14;
+  --neon-lime-glow: rgba(57, 255, 20, 0.45);
+  --neon-red: #ff1e44;
+  --neon-red-glow: rgba(255, 30, 68, 0.55);
+  --neon-yellow: #ffdd00;
+  --neon-cyan: #00e5ff;
+
+  /* Current Active Accent (Default: Lime) */
+  --accent: var(--neon-lime);
+  --accent-glow: var(--neon-lime-glow);
+
+  /* Typography */
+  --font-mono: 'Share Tech Mono', 'Courier New', monospace;
+  --font-display: 'Orbitron', -apple-system, sans-serif;
+  --font-tech: 'Chakra Petch', sans-serif;
+  --font-data: 'Rajdhani', sans-serif;
+
+  --text-main: #f3f6fc;
+  --text-muted: #6e798d;
+  --text-dim: #384252;
+}
+
+body.theme-racing-red {
+  --accent: var(--neon-red);
+  --accent-glow: var(--neon-red-glow);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  background-color: #030406;
+  color: var(--text-main);
+  font-family: var(--font-tech);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* Device Viewport Wrapper */
+.viewport-wrapper {
+  width: 100%;
+  max-width: 430px;
+  height: 920px;
+  max-height: 100vh;
+  background: var(--bg-deep);
+  position: relative;
+  border-radius: 40px;
+  border: 3px solid #1a212e;
+  box-shadow: 0 0 70px rgba(0, 0, 0, 0.95), 0 0 25px rgba(57, 255, 20, 0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 480px) {
+  .viewport-wrapper {
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+.cockpit-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 20px 20px 20px;
+  z-index: 1;
+}
+
+/* Carbon Fiber Mesh Background */
+.carbon-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 50% 25%, rgba(57, 255, 20, 0.04) 0%, transparent 65%),
+    linear-gradient(27deg, #0e131b 5px, transparent 5px) 0 5px,
+    linear-gradient(207deg, #0e131b 5px, transparent 5px) 10px 0px,
+    linear-gradient(27deg, #151c27 5px, transparent 5px) 0px 10px,
+    linear-gradient(207deg, #151c27 5px, transparent 5px) 10px 5px,
+    linear-gradient(90deg, #080a0e 10px, transparent 10px),
+    linear-gradient(#080a0e 25%, #050609 25%, #050609 50%, transparent 50%, transparent 75%, #0d1219 75%);
+  background-size: 20px 20px;
+  opacity: 0.85;
+  z-index: -2;
+}
+
+.ambient-glow {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  filter: blur(55px);
+  pointer-events: none;
+  opacity: 0.35;
+  transition: all 0.4s ease;
+  z-index: -1;
+}
+
+/* ==========================================================================
+   1. HEADER SUPERIOR & INDICADOR BLUETOOTH (ACTIVO / INACTIVO)
+   ========================================================================== */
+.top-hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.app-identity {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-brand {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.app-tag {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  color: var(--accent);
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+/* Bluetooth Status Pill */
+.bt-status-pill {
+  background: rgba(14, 19, 27, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.bt-status-pill:hover {
+  transform: translateY(-1px);
+}
+
+.bt-icon-wrapper {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bt-svg {
+  width: 15px;
+  height: 15px;
+  stroke: var(--text-muted);
+  transition: stroke 0.25s ease;
+}
+
+.bt-beacon {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  top: -1px;
+  right: -2px;
+  background: var(--text-muted);
+  transition: all 0.25s ease;
+}
+
+.bt-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.bt-label {
+  font-size: 0.58rem;
+  font-family: var(--font-data);
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.bt-state-text {
+  font-family: var(--font-tech);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  color: var(--text-muted);
+}
+
+/* Estado Bluetooth CONECTADO (Activo) */
+.bt-status-pill.connected {
+  border-color: rgba(57, 255, 20, 0.4);
+  background: rgba(16, 28, 20, 0.75);
+  box-shadow: 0 0 14px rgba(57, 255, 20, 0.2);
+}
+
+.bt-status-pill.connected .bt-svg {
+  stroke: var(--neon-lime);
+  filter: drop-shadow(0 0 4px var(--neon-lime));
+}
+
+.bt-status-pill.connected .bt-beacon {
+  background: var(--neon-lime);
+  box-shadow: 0 0 6px var(--neon-lime);
+  animation: beaconPulse 1.4s infinite;
+}
+
+.bt-status-pill.connected .bt-state-text {
+  color: var(--neon-lime);
+}
+
+/* Estado Bluetooth DESCONECTADO (Inactivo) */
+.bt-status-pill.disconnected {
+  border-color: rgba(255, 30, 68, 0.4);
+  background: rgba(30, 14, 18, 0.75);
+  box-shadow: 0 0 10px rgba(255, 30, 68, 0.15);
+}
+
+.bt-status-pill.disconnected .bt-svg {
+  stroke: var(--neon-red);
+}
+
+.bt-status-pill.disconnected .bt-beacon {
+  background: var(--neon-red);
+  box-shadow: 0 0 6px var(--neon-red);
+}
+
+.bt-status-pill.disconnected .bt-state-text {
+  color: var(--neon-red);
+}
+
+@keyframes beaconPulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+.status-chip {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-data);
+  letter-spacing: 1px;
+}
+
+.live-chip {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.live-chip.active-recording {
+  background: rgba(255, 30, 68, 0.2);
+  color: #fff;
+  border: 1px solid var(--neon-red);
+  box-shadow: 0 0 10px var(--neon-red-glow);
+  animation: recFlicker 1.5s infinite;
+}
+
+@keyframes recFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+/* ==========================================================================
+   2 & 4. CLUSTER: TRES TARJETAS DE DATOS ALREDEDOR DEL VELOCÍMETRO
+   ========================================================================== */
+.cluster-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+/* 3 Tarjetas Satélite: Distancia, Tiempo y Desnivel Positivo (+D) */
+.metrics-satellite-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.metric-card {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 12px;
+  padding: 8px 10px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 72px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.metric-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.card-icon-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.card-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.dot-lime {
+  background: var(--neon-lime);
+  box-shadow: 0 0 5px var(--neon-lime);
+}
+
+.card-title {
+  font-family: var(--font-data);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.metric-value-box {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 3px 0 4px 0;
+}
+
+.metric-num {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.font-mono {
+  font-family: var(--font-mono) !important;
+  font-size: 1.12rem;
+  letter-spacing: 0;
+}
+
+.font-mono small {
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.metric-unit {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.text-lime {
+  color: var(--neon-lime) !important;
+  text-shadow: 0 0 10px var(--neon-lime-glow);
+}
+
+.metric-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 2px;
+}
+
+.bar-fill-time {
+  background: var(--neon-yellow);
+}
+
+.bar-fill-lime {
+  background: var(--neon-lime);
+  box-shadow: 0 0 6px var(--neon-lime);
+}
+
+/* ==========================================================================
+   2. VELOCÍMETRO DIGITAL CENTRAL DE GRAN TAMAÑO
+   ========================================================================== */
+.speedometer-centerpiece {
+  position: relative;
+  width: 100%;
+  height: 195px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 65%, rgba(18, 25, 38, 0.6) 0%, transparent 75%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gauge-arc-track {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 180px;
+  pointer-events: none;
+}
+
+.speed-radial-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.radial-bg {
+  stroke: rgba(255, 255, 255, 0.07);
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+
+.radial-active {
+  stroke: url(#speedGrad);
+  stroke-width: 11;
+  stroke-linecap: round;
+  stroke-dasharray: 480;
+  stroke-dashoffset: 200; /* Calculated via JS */
+  filter: drop-shadow(0 0 10px rgba(57, 255, 20, 0.6));
+  transition: stroke-dashoffset 0.12s ease-out;
+}
+
+.speed-ticks {
+  position: absolute;
+  bottom: 8px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+.speedometer-readout {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.speed-header-label {
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Tipografía técnica / monoespaciada de gran tamaño */
+.speed-digits-mono {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 5.6rem;
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -3px;
+  color: #ffffff;
+  text-shadow: 
+    0 0 35px rgba(255, 255, 255, 0.25),
+    0 0 14px var(--accent-glow);
+  margin: 2px 0 2px 0;
+}
+
+.speed-unit-sub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.unit-main {
+  font-family: var(--font-data);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--text-muted);
+}
+
+.speed-max-tag {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.speed-max-tag b {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   3. GRÁFICO DE LÍNEAS MINIMALISTA DE ALTIMETRÍA EN TIEMPO REAL
+   ========================================================================== */
+.altimetry-section {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 16px;
+  padding: 10px 14px 10px 14px;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.altimetry-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-lime), transparent);
+  opacity: 0.6;
+}
+
+.altimetry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.alt-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.alt-icon {
+  font-size: 0.85rem;
+}
+
+.alt-title {
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+}
+
+.alt-current-badge {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.alt-curr-lbl {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.alt-curr-val {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--neon-lime);
+  text-shadow: 0 0 8px var(--neon-lime-glow);
+}
+
+.altimetry-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 96px;
+}
+
+#altimetryCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.alt-grid-lines {
+  position: absolute;
+  right: 4px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.alt-grid-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  background: rgba(6, 8, 11, 0.6);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   5. BOTÓN PRINCIPAL GRANDE PARA "ANULACIÓN MANUAL" (START / STOP)
+   ========================================================================== */
+.manual-override-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.manual-override-btn {
+  width: 100%;
+  height: 78px;
+  background: linear-gradient(180deg, #200408 0%, #120204 60%, #080102 100%);
+  border: 2px solid var(--neon-red);
+  border-radius: 18px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 0 25px var(--neon-red-glow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 10px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.manual-override-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 38px var(--neon-red-glow);
+}
+
+.manual-override-btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+/* Franja reflectante de competición / hazard */
+.btn-hazard-stripe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--neon-red),
+    var(--neon-red) 6px,
+    #080102 6px,
+    #080102 12px
+  );
+  opacity: 0.8;
+}
+
+.manual-override-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--neon-red),
+    var(--neon-red) 6px,
+    #080102 6px,
+    #080102 12px
+  );
+  opacity: 0.8;
+}
+
+.btn-outer-scanner {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transform: skewX(-25deg);
+  animation: buttonScan 3.5s infinite;
+}
+
+@keyframes buttonScan {
+  0% { left: -100%; }
+  35% { left: 160%; }
+  100% { left: 160%; }
+}
+
+.btn-inner-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.override-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.override-power-svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--neon-red);
+  filter: drop-shadow(0 0 5px var(--neon-red));
+}
+
+.override-sub {
+  font-family: var(--font-data);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--neon-red);
+}
+
+.override-main-text {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+  line-height: 1;
+}
+
+.override-prompt-caption {
+  font-family: var(--font-tech);
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 3px;
+}
+
+/* Estado ACTIVO de Grabación (STOP REC) */
+.manual-override-btn.active-rec {
+  background: linear-gradient(180deg, #3d030c 0%, #200206 60%, #100103 100%);
+  border-color: #ff3355;
+  box-shadow: 
+    0 0 45px rgba(255, 30, 68, 0.9),
+    inset 0 0 20px rgba(255, 30, 68, 0.4);
+  animation: overridePulse 1.2s infinite alternate;
+}
+
+.manual-override-btn.active-rec .override-power-svg {
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 8px #ffffff);
+}
+
+.manual-override-btn.active-rec .override-main-text {
+  color: #ffffff;
+  text-shadow: 0 0 15px #ff1e44;
+}
+
+@keyframes overridePulse {
+  0% { transform: scale(0.99); box-shadow: 0 0 25px var(--neon-red-glow); }
+  100% { transform: scale(1.01); box-shadow: 0 0 45px var(--neon-red); }
+}
+
+/* Toggle Controls Demo */
+.demo-bar {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.ghost-toggle {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text-muted);
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ghost-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: var(--accent);
+}
