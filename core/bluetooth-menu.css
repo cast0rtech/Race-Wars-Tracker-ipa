@@ -385,3 +385,25 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(0, 229, 255, 0.4);
 }
+
+.bt-radar-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 229, 255, 0.2);
+  border-top-color: #00e5ff;
+  border-radius: 50%;
+  animation: btSpin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes btSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.bt-settings-native-btn:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}

@@ -151,7 +151,18 @@
         }
       }
 
-      // 4. Iniciar GPS en el motor de telemetría
+      // 4. Iniciar y pedir permisos de Bluetooth nativo (Android 12+ BLUETOOTH_SCAN y CONNECT)
+      const BlePlugin = window.Capacitor?.Plugins?.BluetoothLe;
+      if (BlePlugin && typeof BlePlugin.initialize === 'function') {
+        try {
+          await BlePlugin.initialize({ androidNeverForLocation: false });
+          console.log('[Permissions] BluetoothLe inicializado y permisos concedidos.');
+        } catch (bleErr) {
+          console.warn('[Permissions] Aviso inicializando BluetoothLe:', bleErr);
+        }
+      }
+
+      // 5. Iniciar GPS en el motor de telemetría
       if (window.RealTelemetryEngine) {
         const engine = window.RealTelemetryEngine;
         if (typeof engine.startHardwareGps === 'function') {

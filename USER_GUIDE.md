@@ -51,20 +51,20 @@ Al abrir la aplicación por primera vez, verás la pantalla de **"ACTIVAR TELEME
 
 ## 3. Configuración de Bluetooth y Auto-Arranque
 
-Race Wars Tracker está diseñado para funcionar sin que tengas que tocar el móvil mientras conduces.
+Race Wars Tracker se comunica directamente con el chip Bluetooth de tu teléfono Android para detectar tu coche real:
 
-### Cómo vincular tu coche:
+### Cómo vincular y elegir tu coche:
 1. En el Cockpit superior, toca la píldora **`BLUETOOTH`**.
-2. Se abrirá la ventana **"VINCULACIÓN DEL VEHÍCULO"**.
-3. Pulsa el botón azul **`🔍 ESCANEAR DISPOSITIVOS REALES`**:
-   * El sistema buscará los dispositivos Bluetooth físicos encendidos a tu alrededor (la radio de tu coche, el manos libres Bluetooth o tu adaptador OBD2).
-   * Toca sobre tu coche cuando aparezca para vincularlo.
-   * *Alternativa:* Si prefieres no escanear, escribe el nombre del Bluetooth de tu coche en el campo de texto (por ejemplo *"Mi Golf GTI"* o *"Audio_BT"*) y pulsa **`+ Guardar`**.
+2. Se abrirá la ventana **"VINCULACIÓN DEL VEHÍCULO"**:
+   * **Detección Automática de Dispositivos del Teléfono:** La aplicación consulta inmediatamente los dispositivos Bluetooth ya emparejados en tu móvil (la radio de tu coche, manos libres, OBD2 o auriculares) y los muestra en la lista con su nombre real y dirección MAC física.
+   * **Escaneo de Ondas en Vivo:** Pulsa **`🔍 ESCANEAR DISPOSITIVOS REALES`** para buscar cualquier dispositivo encendido a tu alrededor. Verás un radar en vivo que lista cada dispositivo con su intensidad de señal (dBm).
+   * **Ajustes de Android Directos:** Si tu coche es nuevo o aún no lo has emparejado, pulsa **`⚙️ ABRIR AJUSTES BLUETOOTH DE ANDROID`** para vincularlo en el sistema. Al regresar a la app, aparecerá de inmediato en la lista.
+3. **Selección Inmediata:** Simplemente **toca sobre cualquier dispositivo real de la lista** para seleccionarlo. El indicador pasará a verde luminoso con el nombre de tu coche y estado `CONECTADO Y ACTIVO`.
 
 ### Auto-Inicio de Ruta:
 * Deja activado el interruptor **"Auto-Inicio de Ruta"**.
-* Cada vez que entres a tu coche y el móvil se conecte al Bluetooth, la telemetría empezará a grabar automáticamente.
-* **Ventana de gracia (30s, 45s, 60s):** Si te detienes en una gasolinera o apagas el motor momentáneamente en un semáforo, la app esperará ese tiempo antes de dar la ruta por finalizada, evitando que el track se corte.
+* Cada vez que entres a tu coche y el móvil se conecte al Bluetooth seleccionado, la telemetría empezará a grabar la ruta automáticamente sin tocar la pantalla.
+* **Ventana de gracia (30s, 45s, 60s):** Si te detienes en un semáforo o apagas el motor brevemente para repostar, la app mantiene la sesión abierta sin cortar el track.
 
 ---
 
