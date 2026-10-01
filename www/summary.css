@@ -130,6 +130,12 @@
   stroke-linejoin: round;
 }
 
+.export-zip-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
 .pin-label {
   font-family: var(--font-data);
   font-size: 8px;

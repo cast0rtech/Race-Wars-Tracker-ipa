@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     distBarFill.style.width = `${Math.min(100, (data.distanceKm / progressTarget) * 100)}%`;
 
     // 3. Altitud y Desnivel Real
-    currentAlt.textContent = `${data.currentAltitude} m`;
+    currentAlt.textContent = data.altitudeAvailable ? `${data.currentAltitude} m` : '— m';
     elevGainVal.textContent = `+${data.elevationGain}`;
 
     // 4. Gráfico de Altimetría en vivo
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 4. BOTÓN MANUAL OVERRIDE (START / STOP RECORDING)
-  overrideBtn.addEventListener('click', () => {
+  overrideBtn.addEventListener('click', async () => {
     triggerHaptic(75);
 
     if (!telemetry.isRecording) {
@@ -301,7 +301,20 @@ document.addEventListener('DOMContentLoaded', () => {
       recStatusChip.style.color = '#ffffff';
     } else {
       // Detener grabación real y guardar sesión
-      const session = telemetry.stopRecording();
+      let session;
+      try {
+        session = await telemetry.stopRecording();
+      } catch (error) {
+        console.error('[Telemetry] No se pudo guardar la sesión:', error);
+        overrideBtn.classList.remove('active-rec');
+        overrideText.textContent = 'START ROUTE';
+        overrideSub.textContent = 'PULSAR PARA REGISTRO';
+        recStatusChip.classList.remove('active-recording');
+        recStatusChip.textContent = 'SESIÓN SIN GUARDAR';
+        recStatusChip.style.color = 'var(--neon-red)';
+        if (window.ProPaywallModal) window.ProPaywallModal.showToast('No se pudo guardar la sesión. Comprueba el espacio disponible en el dispositivo.');
+        return;
+      }
       overrideBtn.classList.remove('active-rec');
       overrideText.textContent = 'START ROUTE';
       overrideSub.textContent = 'PULSAR PARA REGISTRO';
@@ -310,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
       recStatusChip.style.color = 'var(--neon-lime)';
 
       if (window.ProPaywallModal) {
-        window.ProPaywallModal.showToast(`✓ Ruta de ${session.distanceKm} km guardada con éxito. Consulta el resumen.`);
+        window.ProPaywallModal.showToast(`✓ Ruta de ${session.distanceKm} km guardada con ${session.trackpointsCount} puntos GPS.`);
       }
     }
   });
@@ -362,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 6. INYECCIÓN GPX DE DEMOSTRACIÓN (PUERTO DE NAVACERRADA)
+  // 6. DEMO SINTÉTICA (NO ES UNA RUTA GPS NI SE GUARDA COMO SESIÓN)
   if (gpxReplayBtn && window.GPXReplayEngine && window.SensorFusionEngine) {
     const replayEngine = new window.GPXReplayEngine({ speedMultiplier: 8.0 });
     const fusionEngine = new window.SensorFusionEngine({ hysteresisThreshold: 3.0 });
@@ -389,14 +402,14 @@ document.addEventListener('DOMContentLoaded', () => {
     gpxReplayBtn.addEventListener('click', () => {
       if (replayEngine.isPlaying) {
         replayEngine.stopReplay();
-        gpxReplayBtn.textContent = '▶ Inyectar GPX Real (Navacerrada 42km)';
+        gpxReplayBtn.textContent = '▶ Demo sintética (no GPS)';
         gpxReplayBtn.style.color = 'var(--neon-lime)';
         telemetry.setSimulation(false);
       } else {
         telemetry.setSimulation(true);
         if (simInterval) clearInterval(simInterval);
         replayEngine.startReplay(8.0);
-        gpxReplayBtn.textContent = '⏸ Pausar Replay GPX (8x)';
+        gpxReplayBtn.textContent = '⏸ Detener demo sintética';
         gpxReplayBtn.style.color = 'var(--neon-yellow)';
         simToggle.textContent = 'Modo: GPX Replay';
       }

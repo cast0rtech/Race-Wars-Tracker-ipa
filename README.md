@@ -14,6 +14,10 @@
 
 **Race Wars Tracker** es una plataforma móvil diseñada para conductores, pilotos y entusiastas del motorsport. Transforma cualquier smartphone Android en un **Cockpit Digital de Competición** con telemetría de precisión militar, captura continua por satélite, fusión de sensores inerciales y barométricos, y sincronización automática inalámbrica con el vehículo.
 
+### Estado funcional de esta versión
+
+La app registra coordenadas recibidas del GPS del teléfono, guarda sesiones localmente durante la grabación, muestra sus métricas y permite exportarlas en un ZIP con `route.gpx` y `session.json`. El botón de demo genera datos sintéticos y no debe usarse como una ruta real. Esta versión todavía no captura meteorología, no genera tarjetas visuales 4K, no integra anuncios bonificados reales y no garantiza grabación con la app en segundo plano.
+
 A diferencia de las aplicaciones convencionales de tracking, **Race Wars Tracker opera en Modo 100% Real**, midiendo la física del vehículo directamente mediante su chip GNSS de alta frecuencia y calculando la altitud exacta mediante un **filtro Kalman complementario**, eliminando falsas derivas térmicas en puertos de montaña y circuitos.
 
 ---

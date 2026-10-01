@@ -34,14 +34,14 @@
             <span>★</span>
             <span id="proStatusText">FREE</span>
           </button>
-          <div class="route-date-badge">
-            <span>HOY 17:42</span>
-          </div>
+          <div class="route-date-badge"><span id="routeDate">Sin sesión seleccionada</span></div>
         </div>
       </header>
 
       <!-- Scrollable Report Body -->
       <div class="summary-scroll-content">
+        <div id="sessionTypeBadge" style="display:none; margin: 0 0 12px 0; font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 6px; background: rgba(255, 221, 0, 0.15); color: #ffdd00; border: 1px solid #ffdd00; text-transform: uppercase; letter-spacing: 0.5px;"></div>
+
         <!-- 1. MAPA ESTÁTICO SUPERIOR CON TRAZADO NEÓN -->
         <section class="static-map-card">
           <div class="map-render-frame">
@@ -75,7 +75,7 @@
               </defs>
 
               <!-- Route Path -->
-              <path class="route-highlight-path" d="M 65,160 C 85,165 110,135 135,145 C 160,155 180,95 210,85 C 240,75 270,110 295,75 C 320,40 340,55 350,45" filter="url(#neonGlow)" />
+              <polyline class="route-highlight-path" id="routeTrack" points="" filter="url(#neonGlow)" />
 
               <!-- Start Pin (Cyan) -->
               <g class="map-pin start-pin" transform="translate(65, 160)">
@@ -94,8 +94,8 @@
 
             <!-- Map Metadata Overlay -->
             <div class="map-data-chip">
-              <span class="chip-item"><b>TRAMO:</b> PUERTO DE NAVACERRADA</span>
-              <span class="chip-item text-lime"><b>DISTANCIA:</b> 42.6 KM</span>
+            <span class="chip-item" id="routePointCount"><b>TRAZADO GPS:</b> — PUNTOS</span>
+              <span class="chip-item text-lime" id="routeDistance"><b>DISTANCIA:</b> — KM</span>
             </div>
           </div>
         </section>
@@ -104,7 +104,7 @@
         <section class="highlights-panel">
           <div class="section-title-row">
             <span class="section-title">Highlights</span>
-            <span class="section-sub-tag">TELEMETRÍA OFICIAL</span>
+            <span class="section-sub-tag">DATOS DE LA SESIÓN</span>
           </div>
 
           <div class="highlights-grid">
@@ -115,7 +115,7 @@
                 <span class="hl-chip">AVG</span>
               </div>
               <div class="hl-value-row">
-                <span class="hl-num">94.2</span>
+                <span class="hl-num">—</span>
                 <span class="hl-unit">km/h</span>
               </div>
             </div>
@@ -127,7 +127,7 @@
                 <span class="hl-chip text-red">TOP</span>
               </div>
               <div class="hl-value-row">
-                <span class="hl-num text-white">214</span>
+                <span class="hl-num text-white">—</span>
                 <span class="hl-unit">km/h</span>
               </div>
             </div>
@@ -139,7 +139,7 @@
                 <span class="hl-chip">PEAK</span>
               </div>
               <div class="hl-value-row">
-                <span class="hl-num text-lime">1,480</span>
+                <span class="hl-num text-lime">—</span>
                 <span class="hl-unit">m</span>
               </div>
             </div>
@@ -151,7 +151,7 @@
                 <span class="hl-chip text-lime">ASC</span>
               </div>
               <div class="hl-value-row">
-                <span class="hl-num text-lime">+840</span>
+                <span class="hl-num text-lime">—</span>
                 <span class="hl-unit">m</span>
               </div>
             </div>
@@ -163,7 +163,7 @@
                 <span class="hl-chip text-cyan">DESC</span>
               </div>
               <div class="hl-value-row">
-                <span class="hl-num text-cyan">-810</span>
+                <span class="hl-num text-cyan">—</span>
                 <span class="hl-unit">m</span>
               </div>
             </div>
@@ -174,81 +174,11 @@
         <section class="weather-timeline-section">
           <div class="section-title-row">
             <span class="section-title">Línea de Tiempo Meteorológica</span>
-            <a href="card-offscreen.html" class="section-sub-tag text-lime" style="text-decoration: none;" title="Ver componente aislado">VER TARJETA OFF-SCREEN ➔</a>
+            <span class="section-sub-tag">SIN DATOS CAPTURADOS</span>
           </div>
 
           <div class="weather-timeline-scroll" id="weatherTimeline">
-            <!-- Captura 1: Salida / Despejado -->
-            <div class="weather-capture-card">
-              <div class="capture-map-frame">
-                <div class="mini-map-preview map-thumb-1"></div>
-                <div class="snap-badge">KM 0.0</div>
-              </div>
-              <div class="capture-info">
-                <div class="capture-time">02:05:35</div>
-                <div class="weather-condition-row">
-                  <span class="w-icon">☀️</span>
-                  <div class="w-metrics">
-                    <span class="w-temp">14°C</span>
-                    <span class="w-hum">78% HR</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Captura 2: Ascenso / Lluvia Ligera -->
-            <div class="weather-capture-card active-inspect">
-              <div class="capture-map-frame">
-                <div class="mini-map-preview map-thumb-2"></div>
-                <div class="snap-badge">KM 14.8</div>
-              </div>
-              <div class="capture-info">
-                <div class="capture-time">02:05:45</div>
-                <div class="weather-condition-row">
-                  <span class="w-icon">🌧️</span>
-                  <div class="w-metrics">
-                    <span class="w-temp">14°C</span>
-                    <span class="w-hum">78% HR</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Captura 3: Cumbre / Lluvia Fuerte & Niebla -->
-            <div class="weather-capture-card" data-pro-required="true">
-              <div class="capture-map-frame">
-                <div class="mini-map-preview map-thumb-3"></div>
-                <div class="snap-badge">KM 28.2 <span class="pro-lock-badge">PRO</span></div>
-              </div>
-              <div class="capture-info">
-                <div class="capture-time">02:07:43</div>
-                <div class="weather-condition-row">
-                  <span class="w-icon">⛈️</span>
-                  <div class="w-metrics">
-                    <span class="w-temp">12°C</span>
-                    <span class="w-hum">78% HR</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Captura 4: Descenso / Niebla -->
-            <div class="weather-capture-card" data-pro-required="true">
-              <div class="capture-map-frame">
-                <div class="mini-map-preview map-thumb-4"></div>
-                <div class="snap-badge">KM 42.6 <span class="pro-lock-badge">PRO</span></div>
-              </div>
-              <div class="capture-info">
-                <div class="capture-time">02:08:12</div>
-                <div class="weather-condition-row">
-                  <span class="w-icon">🌫️</span>
-                  <div class="w-metrics">
-                    <span class="w-temp">11°C</span>
-                    <span class="w-hum">84% HR</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p>Esta versión no captura datos meteorológicos. No hay datos reales del tiempo para esta sesión.</p>
           </div>
         </section>
       </div>
@@ -266,8 +196,8 @@
               </svg>
             </div>
             <div class="export-text-stack">
-              <span class="export-main-label">EXPORTAR ZIP</span>
-              <span class="export-sub-label">(GPX + TELEMETRÍA VISUAL)</span>
+              <span class="export-main-label">EXPORTAR ZIP REAL</span>
+              <span class="export-sub-label">(GPX GPS + TELEMETRÍA JSON)</span>
             </div>
           </div>
           <!-- Barra de Progreso de Empaquetado Oculta -->
@@ -277,12 +207,13 @@
         </button>
 
         <div class="toast-feedback" id="toastFeedback">
-          ✓ Archivo "RaceWars_Trayecto_Navacerrada.zip" generado con éxito
+          La exportación aparecerá aquí.
         </div>
       </footer>
     </main>
   </div>
 
+  <script src="core/session-store.js"></script>
   <script src="core/ad-manager.js"></script>
   <script src="core/pro-manager.js"></script>
   <script src="core/pro-paywall.js"></script>

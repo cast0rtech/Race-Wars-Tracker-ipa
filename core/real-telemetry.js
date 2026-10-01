@@ -32,12 +32,15 @@
       this.recordStartTime = 0;
       this.elapsedMs = 0;
       this.timerInterval = null;
+      this.checkpointInterval = null;
+      this.recordingSessionId = null;
 
       // Métricas en tiempo real
       this.currentSpeedKmh = 0;
       this.maxSpeedKmh = 0;
       this.totalDistanceKm = 0;
       this.currentAltitudeMeters = 0;
+      this.altitudeAvailable = false;
       this.elevationGainMeters = 0;
       this.elevationLossMeters = 0;
 
@@ -84,6 +87,7 @@
      * Inicia la escucha continua del chip GPS del dispositivo
      */
     async startHardwareGps() {
+      if (this.gpsWatchId !== null) return;
       console.log('[Telemetry] Solicitando permisos e iniciando chip GPS nativo...');
       this._notifyStatus('BUSCANDO SATÉLITES GPS...', 'searching');
 
@@ -125,7 +129,7 @@
 
       const lat = coords.latitude;
       const lng = coords.longitude;
-      const rawAlt = coords.altitude !== null ? coords.altitude : (this.currentAltitudeMeters || 650);
+      const rawAlt = Number.isFinite(coords.altitude) ? coords.altitude : null;
 
       // 1. Cálculo de velocidad real (km/h)
       let calculatedSpeed = 0;
@@ -151,19 +155,21 @@
       }
 
       // 2. Fusión de sensores para altitud
-      if (this.fusion) {
+      if (this.fusion && rawAlt !== null) {
         const fResult = this.fusion.update({
           timestamp: timestamp,
           gpsAltitude: rawAlt,
           gpsAccuracyV: coords.altitudeAccuracy || 8
         });
         this.currentAltitudeMeters = fResult.fusedAltitude;
+        this.altitudeAvailable = true;
         if (this.isRecording) {
           this.elevationGainMeters = fResult.elevationGain;
           this.elevationLossMeters = fResult.elevationLoss;
         }
-      } else {
+      } else if (rawAlt !== null) {
         this.currentAltitudeMeters = Math.round(rawAlt);
+        this.altitudeAvailable = true;
       }
 
       // Actualizar buffer de altitud para el gráfico
@@ -190,8 +196,11 @@
           lat: lat,
           lng: lng,
           speedKmh: this.currentSpeedKmh,
-          altitudeM: this.currentAltitudeMeters
+          altitudeM: rawAlt !== null ? this.currentAltitudeMeters : null
         });
+      } else if (this.isRecording) {
+        // The first fix after pressing Start is the route origin.
+        this.trackpoints.push({ timestamp, lat, lng, speedKmh: this.currentSpeedKmh, altitudeM: rawAlt !== null ? this.currentAltitudeMeters : null });
       }
 
       this.lastPosition = { lat, lng, timestamp };
@@ -230,17 +239,32 @@
      * Inicia la grabación oficial de ruta
      */
     startRecording() {
+      if (this.isRecording) return;
       this.isRecording = true;
       this.recordStartTime = Date.now();
+      this.isSynthetic = !!this.isSimulating;
+      this.recordingSessionId = 'session_' + this.recordStartTime + '_' + Math.random().toString(36).slice(2, 8);
+      this.elapsedMs = 0;
       this.trackpoints = [];
       this.totalDistanceKm = 0;
       this.elevationGainMeters = 0;
       this.elevationLossMeters = 0;
       this.maxSpeedKmh = this.currentSpeedKmh;
 
+      // Seed the route with the most recent real fix so the first recorded segment
+      // starts at the user's location instead of one GPS interval later.
+      if (this.lastPosition) {
+        this.trackpoints.push({
+          timestamp: this.lastPosition.timestamp,
+          lat: this.lastPosition.lat,
+          lng: this.lastPosition.lng,
+          speedKmh: this.currentSpeedKmh,
+          altitudeM: this.altitudeAvailable ? this.currentAltitudeMeters : null
+        });
+      }
+
       if (this.fusion) {
-        this.fusion.elevationGain = 0;
-        this.fusion.elevationLoss = 0;
+        this.fusion.reset();
       }
 
       // Temporizador de tiempo transcurrido
@@ -251,6 +275,11 @@
         }
       }, 100);
 
+      // Persist a recoverable draft during long routes, not only when Stop is pressed.
+      this.checkpointInterval = setInterval(() => {
+        this._persistRecordingDraft().catch(error => console.warn('[Telemetry] No se pudo guardar el punto de recuperación:', error));
+      }, 10000);
+
       console.log('[Telemetry] Grabación de ruta iniciada con GPS real.');
       this._dispatchUpdate();
     }
@@ -258,37 +287,66 @@
     /**
      * Detiene la grabación y persiste la sesión para el Debrief / Resumen
      */
-    stopRecording() {
+    async stopRecording() {
+      if (!this.isRecording) return null;
+      this.elapsedMs = Math.max(this.elapsedMs, Date.now() - this.recordStartTime);
       this.isRecording = false;
       if (this.timerInterval) {
         clearInterval(this.timerInterval);
         this.timerInterval = null;
       }
+      if (this.checkpointInterval) {
+        clearInterval(this.checkpointInterval);
+        this.checkpointInterval = null;
+      }
 
       // Guardar sesión en almacenamiento local para la pantalla de Resumen
-      const sessionData = {
-        id: 'session_' + Date.now(),
-        date: new Date().toISOString(),
-        durationMs: this.elapsedMs,
-        distanceKm: parseFloat(this.totalDistanceKm.toFixed(2)),
-        avgSpeedKmh: this.elapsedMs > 0 ? Math.round((this.totalDistanceKm / (this.elapsedMs / 3600000))) : 0,
-        maxSpeedKmh: this.maxSpeedKmh,
-        elevationGainM: Math.round(this.elevationGainMeters),
-        elevationLossM: Math.round(this.elevationLossMeters),
-        peakAltitudeM: Math.max(...(this.altHistory.length ? this.altHistory : [this.currentAltitudeMeters])),
-        trackpointsCount: this.trackpoints.length,
-        trackpoints: this.trackpoints
-      };
+      const sessionData = this._createSessionData('COMPLETED');
 
-      try {
+      if (window.RaceWarsSessionStore) {
+        await window.RaceWarsSessionStore.save(sessionData);
+        // Preserve compatibility with older app builds that read the previous key.
+        try { localStorage.setItem('racewars_last_session', JSON.stringify(sessionData)); } catch (_) { /* IndexedDB is authoritative. */ }
+        console.log('[Telemetry] Sesión persistida:', sessionData.id);
+      } else {
         localStorage.setItem('racewars_last_session', JSON.stringify(sessionData));
-        console.log('[Telemetry] Sesión guardada con éxito en almacenamiento:', sessionData);
-      } catch (e) {
-        console.error('[Telemetry] Error guardando sesión:', e);
       }
 
       this._dispatchUpdate();
       return sessionData;
+    }
+
+    _createSessionData(status) {
+      const altitudePoints = this.trackpoints.filter(point => Number.isFinite(point.altitudeM));
+      const peakAltitude = altitudePoints.reduce((value, point) => Math.max(value, point.altitudeM), -Infinity);
+      const minAltitude = altitudePoints.reduce((value, point) => Math.min(value, point.altitudeM), Infinity);
+      const isSynth = !!(this.isSynthetic || this.isSimulating);
+      return {
+        id: this.recordingSessionId || ('session_' + this.recordStartTime),
+        status,
+        isSynthetic: isSynth,
+        isDemo: isSynth,
+        title: isSynth ? `Ruta Sintética (Demo) ${new Date(this.recordStartTime).toLocaleTimeString()}` : `Ruta GPS Real ${new Date(this.recordStartTime).toLocaleTimeString()}`,
+        startedAt: this.recordStartTime,
+        endedAt: status === 'COMPLETED' ? Date.now() : null,
+        date: new Date(this.recordStartTime || Date.now()).toISOString(),
+        durationMs: this.elapsedMs,
+        distanceKm: parseFloat(this.totalDistanceKm.toFixed(2)),
+        avgSpeedKmh: this.elapsedMs > 0 ? Math.round(this.totalDistanceKm / (this.elapsedMs / 3600000)) : 0,
+        maxSpeedKmh: this.maxSpeedKmh,
+        elevationGainM: altitudePoints.length ? Math.round(this.elevationGainMeters) : null,
+        elevationLossM: altitudePoints.length ? Math.round(this.elevationLossMeters) : null,
+        peakAltitudeM: altitudePoints.length ? Math.round(peakAltitude) : null,
+        minAltitudeM: altitudePoints.length ? Math.round(minAltitude) : null,
+        trackpointsCount: this.trackpoints.length,
+        trackpoints: this.trackpoints
+      };
+    }
+
+    async _persistRecordingDraft() {
+      if (!this.isRecording || !window.RaceWarsSessionStore || this.trackpoints.length === 0) return;
+      this.elapsedMs = Math.max(this.elapsedMs, Date.now() - this.recordStartTime);
+      await window.RaceWarsSessionStore.save(this._createSessionData('INTERRUPTED'));
     }
 
     /**
@@ -321,7 +379,8 @@
         maxSpeed: this.maxSpeedKmh,
         distanceKm: parseFloat(this.totalDistanceKm.toFixed(2)),
         elapsedMs: this.elapsedMs,
-        currentAltitude: Math.round(this.currentAltitudeMeters),
+        currentAltitude: this.altitudeAvailable ? Math.round(this.currentAltitudeMeters) : null,
+        altitudeAvailable: this.altitudeAvailable,
         elevationGain: Math.round(this.elevationGainMeters),
         altHistory: [...this.altHistory],
         isRecording: this.isRecording,
