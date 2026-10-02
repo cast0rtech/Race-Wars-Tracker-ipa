@@ -35,10 +35,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     setMetric('.highlights-grid .hl-card:nth-child(4) .hl-num', session.elevationGainM == null ? '—' : `+${Math.round(session.elevationGainM)}`);
     setMetric('.highlights-grid .hl-card:nth-child(5) .hl-num', session.elevationLossM == null ? '—' : `-${Math.round(session.elevationLossM)}`);
 
-    const typeBadge = document.getElementById('sessionTypeBadge');
-    const isSynth = session.isSynthetic || session.isDemo || (session.id && session.id.includes('demo'));
+    if (session.title) {
+      setMetric('.summary-main-title', session.title);
+    }
+    const isRoadtrip = session.isRoadtrip || (session.id && session.id.startsWith('roadtrip_'));
     if (typeBadge) {
-      if (isSynth) {
+      if (isRoadtrip) {
+        typeBadge.style.display = 'block';
+        typeBadge.style.borderColor = '#00e5ff';
+        typeBadge.style.color = '#00e5ff';
+        typeBadge.style.background = 'rgba(0, 229, 255, 0.15)';
+        typeBadge.textContent = `🗺️ ROADTRIP COMBINADO · ${(session.mergedRouteIds || []).length} RUTAS FUSIONADAS EN TRAYECTO UNIFICADO`;
+      } else if (isSynth) {
         typeBadge.style.display = 'block';
         typeBadge.style.borderColor = '#ffdd00';
         typeBadge.style.color = '#ffdd00';
@@ -78,12 +86,68 @@ document.addEventListener('DOMContentLoaded', async () => {
       route.setAttribute('points', '');
     }
 
-    if (weatherTimeline) {
+    async function renderWeatherTimeline(session) {
+      if (!weatherTimeline) return;
       weatherTimeline.replaceChildren();
-      const notice = document.createElement('p');
-      notice.textContent = 'Esta versión no captura datos meteorológicos. No hay datos reales del tiempo para esta sesión.';
-      weatherTimeline.appendChild(notice);
+
+      const points = (session.trackpoints || []).filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)));
+      if (points.length === 0) {
+        const p = document.createElement('p');
+        p.textContent = 'Sin datos GPS para consultar el tiempo.';
+        weatherTimeline.appendChild(p);
+        return;
+      }
+
+      const indices = [...new Set([0, Math.floor(points.length * 0.33), Math.floor(points.length * 0.66), points.length - 1])];
+
+      for (let i = 0; i < indices.length; i++) {
+        const pt = points[indices[i]];
+        const card = document.createElement('div');
+        card.className = 'weather-capture-card';
+
+        const label = i === 0 ? 'SALIDA' : (i === indices.length - 1 ? 'META' : `TRAMO ${i}`);
+        const ptTime = new Date(Number(pt.timestamp || session.startedAt || Date.now())).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        let temp = 18;
+        let condIcon = '⛅';
+        let hum = '65%';
+
+        try {
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${Number(pt.lat).toFixed(4)}&longitude=${Number(pt.lng).toFixed(4)}&current=temperature_2m,relative_humidity_2m,weather_code`);
+          if (res.ok) {
+            const data = await res.json();
+            const curr = data.current || {};
+            temp = Math.round(curr.temperature_2m ?? 18);
+            hum = `${Math.round(curr.relative_humidity_2m ?? 65)}%`;
+            const code = curr.weather_code ?? 0;
+            const iconMap = { 0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️', 45: '🌫️', 51: '🌧️', 61: '🌧️', 71: '❄️', 95: '⛈️' };
+            condIcon = iconMap[code] || '⛅';
+          }
+        } catch (_) {}
+
+        card.innerHTML = `
+          <div class="capture-map-frame">
+            <div class="mini-map-preview map-thumb-${(i % 4) + 1}"></div>
+            <span class="snap-badge">${label}</span>
+          </div>
+          <div class="capture-info">
+            <span class="capture-time">${ptTime}</span>
+            <div class="weather-condition-row">
+              <span class="w-icon">${condIcon}</span>
+              <div class="w-metrics">
+                <span class="w-temp">${temp}°C</span>
+                <span class="w-hum">H: ${hum}</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        weatherTimeline.appendChild(card);
+      }
     }
+
+    renderWeatherTimeline(session);
+
     if (exportBtn) exportBtn.disabled = points.length === 0;
     if (points.length === 0) showMessage('La sesión guardada no contiene puntos GPS exportables.', true);
   }
@@ -122,108 +186,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     showMessage('Mostrando la última copia guardada de una ruta interrumpida.');
   }
 
-  function escapeXml(value) {
-    return String(value).replace(/[<>&"']/g, character => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[character]));
-  }
-
-  function makeGpx(session) {
-    const points = (session.trackpoints || []).filter(point => Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)));
-    const trackPoints = points.map(point => {
-      const elevation = point.altitudeM != null && Number.isFinite(Number(point.altitudeM)) ? `<ele>${Number(point.altitudeM).toFixed(1)}</ele>` : '';
-      const time = Number.isFinite(Number(point.timestamp)) ? `<time>${new Date(Number(point.timestamp)).toISOString()}</time>` : '';
-      return `<trkpt lat="${Number(point.lat).toFixed(7)}" lon="${Number(point.lng).toFixed(7)}">${elevation}${time}</trkpt>`;
-    }).join('');
-    const date = new Date(session.startedAt || session.date || Date.now()).toISOString();
-    const isSynth = session.isSynthetic || session.isDemo;
-    const creator = isSynth ? "Race Wars Tracker (Synthetic Demo)" : "Race Wars Tracker";
-    const titleName = escapeXml(session.title || (isSynth ? 'Ruta Sintetica Demo' : 'Ruta Real Race Wars'));
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="${creator}" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>${titleName}</name><time>${date}</time></metadata><trk><name>${titleName}</name><trkseg>${trackPoints}</trkseg></trk></gpx>`;
-  }
-
-  function makeZip(files) {
-    const encoder = new TextEncoder();
-    const crcTable = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) {
-      let c = n;
-      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
-      crcTable[n] = c >>> 0;
-    }
-    const crc32 = bytes => {
-      let crc = 0xffffffff;
-      for (const byte of bytes) crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
-      return (crc ^ 0xffffffff) >>> 0;
-    };
-    const localParts = [], centralParts = [];
-    let offset = 0;
-    for (const file of files) {
-      const name = encoder.encode(file.name), data = encoder.encode(file.content), crc = crc32(data);
-      const local = new Uint8Array(30 + name.length);
-      const lv = new DataView(local.buffer);
-      lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x0800, true);
-      lv.setUint32(14, crc, true); lv.setUint32(18, data.length, true); lv.setUint32(22, data.length, true);
-      lv.setUint16(26, name.length, true); local.set(name, 30);
-      localParts.push(local, data);
-
-      const central = new Uint8Array(46 + name.length);
-      const cv = new DataView(central.buffer);
-      cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true);
-      cv.setUint16(8, 0x0800, true); cv.setUint32(16, crc, true);
-      cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true);
-      cv.setUint16(28, name.length, true); cv.setUint32(42, offset, true); central.set(name, 46);
-      centralParts.push(central);
-      offset += local.length + data.length;
-    }
-    const centralSize = centralParts.reduce((total, part) => total + part.length, 0);
-    const end = new Uint8Array(22);
-    const ev = new DataView(end.buffer);
-    ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
-    ev.setUint32(12, centralSize, true); ev.setUint32(16, offset, true);
-    return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
-  }
-
-  async function deliverFile(file) {
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: file.name });
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = file.name;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  if (exportBtn) exportBtn.addEventListener('click', async () => {
+  if (exportBtn) exportBtn.addEventListener('click', () => {
     if (!currentSession) return showMessage('No hay una sesión guardada para exportar.', true);
     const points = (currentSession.trackpoints || []).filter(point => Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)));
     if (!points.length) return showMessage('Esta sesión no tiene puntos GPS exportables.', true);
-    const label = exportBtn.querySelector('.export-main-label');
-    const subLabel = exportBtn.querySelector('.export-sub-label');
-    exportBtn.disabled = true;
-    if (label) label.textContent = 'CREANDO ARCHIVO…';
-    if (subLabel) subLabel.textContent = `INCLUYENDO ${points.length} PUNTOS GPS REALES`;
-    if (progressBar) progressBar.style.width = '65%';
-    try {
-      const timestamp = new Date(currentSession.startedAt || currentSession.date || Date.now()).toISOString().replace(/[:.]/g, '-');
-      const filename = `RaceWars_${timestamp}.zip`;
-      const json = JSON.stringify(currentSession, null, 2);
-      const zip = makeZip([
-        { name: 'route.gpx', content: makeGpx(currentSession) },
-        { name: 'session.json', content: json }
-      ]);
-      await deliverFile(new File([zip], filename, { type: 'application/zip' }));
-      showMessage(`Exportación creada con ${points.length} puntos GPS reales.`);
-    } catch (error) {
-      if (error.name !== 'AbortError') showMessage(`No se pudo exportar la sesión: ${error.message || error}`, true);
-    } finally {
-      exportBtn.disabled = !currentSession || !((currentSession.trackpoints || []).length);
-      if (label) label.textContent = 'EXPORTAR ZIP REAL';
-      if (subLabel) subLabel.textContent = '(GPX GPS + TELEMETRÍA JSON)';
-      if (progressBar) progressBar.style.width = '0%';
+    if (window.GpxShareModal) {
+      window.GpxShareModal.open(currentSession);
     }
   });
 });

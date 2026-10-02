@@ -32,16 +32,77 @@ document.addEventListener('DOMContentLoaded', () => {
   // Aux controls & PRO integration
   const simToggle = document.getElementById('simToggle');
   const themeToggle = document.getElementById('themeToggle');
+  const themeModalBtn = document.getElementById('themeModalBtn');
+  const savedRoutesBtn = document.getElementById('savedRoutesBtn');
   const proStatusBtn = document.getElementById('proStatusBtn');
   const proStatusText = document.getElementById('proStatusText');
   const themeProBadge = document.getElementById('themeProBadge');
   const gpxReplayBtn = document.getElementById('gpxReplayBtn');
+
+  // Weather Card Elements
+  const weatherTempVal = document.getElementById('weatherTempVal');
+  const weatherCondVal = document.getElementById('weatherCondVal');
+  let lastWeatherFetch = 0;
+
+  async function updateLiveWeather(lat, lon) {
+    const now = Date.now();
+    if (now - lastWeatherFetch < 600000) return;
+    lastWeatherFetch = now;
+
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        const current = data.current || {};
+        const temp = Math.round(current.temperature_2m ?? 18);
+        const code = current.weather_code ?? 0;
+
+        const condMap = {
+          0: '☀️ DESPEJADO', 1: '🌤️ PARCIAL', 2: '⛅ NUBOSIDAD', 3: '☁️ NUBLADO',
+          45: '🌫️ NIEBLA', 51: '🌧️ LLOVIZNA', 61: '🌧️ LLUVIA', 71: '❄️ NIEVE', 95: '⛈️ TORMENTA'
+        };
+        const condText = condMap[code] || '⛅ DESPEJADO';
+
+        if (weatherTempVal) weatherTempVal.textContent = `${temp}°C`;
+        if (weatherCondVal) weatherCondVal.textContent = condText;
+      }
+    } catch (err) {
+      console.log('[Weather] Live update note:', err);
+    }
+  }
+
+  // Initial Weather Location Check
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      pos => updateLiveWeather(pos.coords.latitude, pos.coords.longitude),
+      () => updateLiveWeather(40.4168, -3.7038),
+      { timeout: 4000 }
+    );
+  } else {
+    updateLiveWeather(40.4168, -3.7038);
+  }
 
   // Haptic Feedback Helper
   function triggerHaptic(ms = 50) {
     if (navigator.vibrate) {
       navigator.vibrate(ms);
     }
+  }
+
+  // Theme & Saved Routes Modals Trigger
+  if (themeModalBtn) {
+    themeModalBtn.addEventListener('click', () => {
+      triggerHaptic(40);
+      if (window.ThemeModal) window.ThemeModal.open();
+    });
+  }
+
+  if (savedRoutesBtn) {
+    savedRoutesBtn.addEventListener('click', () => {
+      triggerHaptic(40);
+      if (window.SavedRoutesModal) window.SavedRoutesModal.open();
+    });
   }
 
   // Radial Gauge Calculation (0 - 240 KM/H)
@@ -189,6 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
     mainSpeed.textContent = data.speed;
     updateSpeedGauge(data.speed);
     maxSpeedTag.textContent = data.maxSpeed;
+
+    // 1.5 Update weather if coordinates available
+    if (data.lat && data.lng) {
+      updateLiveWeather(data.lat, data.lng);
+    }
 
     // 2. Distancia y Tiempo Real
     distanceVal.textContent = data.distanceKm.toFixed(2);

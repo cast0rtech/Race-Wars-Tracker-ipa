@@ -5,13 +5,37 @@
 .summary-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 18px 16px 16px 16px;
   overflow: hidden;
   z-index: 1;
+}
+
+@media (orientation: landscape), (min-aspect-ratio: 1.2/1) {
+  .summary-container {
+    padding: 16px 24px;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .summary-scroll-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .static-map-card {
+    height: 100%;
+    min-height: 240px;
+  }
+
+  .map-render-frame {
+    height: 100%;
+    min-height: 220px;
+  }
 }
 
 /* Nav Header */

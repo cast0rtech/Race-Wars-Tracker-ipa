@@ -12,6 +12,9 @@
   <link rel="stylesheet" href="core/ad-manager.css">
   <link rel="stylesheet" href="core/bluetooth-menu.css">
   <link rel="stylesheet" href="core/permissions-modal.css">
+  <link rel="stylesheet" href="core/theme-modal.css">
+  <link rel="stylesheet" href="core/saved-routes-modal.css">
+  <link rel="stylesheet" href="core/gpx-share-modal.css">
 </head>
 <body>
   <div class="viewport-wrapper">
@@ -51,7 +54,7 @@
         </div>
       </header>
 
-      <!-- 2 & 4. Zona Central: Velocímetro Digital y Tres Tarjetas Alrededor -->
+      <!-- 2 & 4. Zona Central: Velocímetro Digital y Cuatro Tarjetas Alrededor -->
       <section class="cluster-zone">
         <!-- Tarjetas Superiores Flanqueando / Alrededor del Velocímetro -->
         <div class="metrics-satellite-grid">
@@ -97,6 +100,21 @@
             </div>
             <div class="metric-progress-bar">
               <div class="bar-fill bar-fill-lime" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Tarjeta 4: Información Meteorológica -->
+          <div class="metric-card" id="cardWeather">
+            <div class="card-icon-tag">
+              <span class="card-dot dot-cyan"></span>
+              <span class="card-title">METEO EN VIVO</span>
+            </div>
+            <div class="metric-value-box">
+              <span class="metric-num text-cyan" id="weatherTempVal">18°C</span>
+              <span class="metric-unit" id="weatherCondVal">☀️ DESPEJADO</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="bar-fill bar-fill-cyan" style="width: 100%;"></div>
             </div>
           </div>
         </div>
@@ -174,11 +192,12 @@
           </div>
         </button>
 
-        <!-- Toggle Auxiliar para Simulación / Demostración -->
+        <!-- Toggle Auxiliar para Simulación / Demostración / Modales -->
         <div class="demo-bar">
-          <button class="ghost-toggle" id="themeToggle">Tema: Neón Verde <span class="pro-lock-badge" id="themeProBadge">PRO</span></button>
+          <button class="ghost-toggle" id="themeModalBtn">🎨 Temas y Fondo</button>
+          <button class="ghost-toggle" id="savedRoutesBtn">📁 Rutas Guardadas</button>
           <button class="ghost-toggle text-lime" id="simToggle">Modo: GPS REAL</button>
-          <button class="ghost-toggle text-lime" id="gpxReplayBtn">▶ Demo sintética (no GPS)</button>
+          <button class="ghost-toggle text-lime" id="gpxReplayBtn">▶ Demo sintética</button>
           <a href="summary.html" class="ghost-toggle" style="text-decoration: none;">Ver Pantalla 3 ➔</a>
         </div>
 
@@ -197,12 +216,16 @@
   <script src="core/sensor-fusion.js"></script>
   <script src="core/session-store.js"></script>
   <script src="core/real-telemetry.js"></script>
+  <script src="core/weather-snapshot-pipeline.js"></script>
   <script src="core/gpx-replay-engine.js"></script>
   <script src="core/ad-manager.js"></script>
   <script src="core/pro-manager.js"></script>
   <script src="core/pro-paywall.js"></script>
   <script src="core/bluetooth-menu.js"></script>
   <script src="core/permissions-modal.js"></script>
+  <script src="core/theme-modal.js"></script>
+  <script src="core/saved-routes-modal.js"></script>
+  <script src="core/gpx-share-modal.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
