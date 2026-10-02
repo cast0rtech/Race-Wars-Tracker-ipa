@@ -58,7 +58,10 @@
     }
 
     _buildModal() {
-      if (document.getElementById('rwThemeModalBackdrop')) return;
+      if (document.getElementById('rwThemeModalBackdrop')) {
+        this.backdrop = document.getElementById('rwThemeModalBackdrop');
+        return;
+      }
 
       const backdrop = document.createElement('div');
       backdrop.id = 'rwThemeModalBackdrop';
@@ -189,10 +192,12 @@
 
     open() {
       if (!this.backdrop) this._buildModal();
-      this.backdrop.classList.add('is-visible');
+      if (!this.backdrop) this.backdrop = document.getElementById('rwThemeModalBackdrop');
+      if (this.backdrop) this.backdrop.classList.add('is-visible');
     }
 
     close() {
+      if (!this.backdrop) this.backdrop = document.getElementById('rwThemeModalBackdrop');
       if (this.backdrop) this.backdrop.classList.remove('is-visible');
     }
   }

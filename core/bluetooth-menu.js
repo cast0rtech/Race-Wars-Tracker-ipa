@@ -59,7 +59,10 @@
     }
 
     _buildModal() {
-      if (document.getElementById('rwBtModalBackdrop')) return;
+      if (document.getElementById('rwBtModalBackdrop')) {
+        this.backdrop = document.getElementById('rwBtModalBackdrop');
+        return;
+      }
 
       const backdrop = document.createElement('div');
       backdrop.id = 'rwBtModalBackdrop';
@@ -545,9 +548,10 @@
 
     open() {
       if (!this.backdrop) this._buildModal();
+      if (!this.backdrop) this.backdrop = document.getElementById('rwBtModalBackdrop');
       this._updateStatusUI();
       this._renderDeviceList();
-      this.backdrop.classList.add('is-visible');
+      if (this.backdrop) this.backdrop.classList.add('is-visible');
 
       // Intentar refrescar la lista de dispositivos vinculados al abrir
       this.loadBondedDevices();
@@ -557,6 +561,7 @@
       if (this.isScanning) {
         this.stopHardwareScan();
       }
+      if (!this.backdrop) this.backdrop = document.getElementById('rwBtModalBackdrop');
       if (this.backdrop) this.backdrop.classList.remove('is-visible');
     }
   }

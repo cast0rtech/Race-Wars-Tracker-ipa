@@ -18,14 +18,11 @@
 
   class RealTelemetryEngine {
     constructor() {
-      // Estado de hardware
+      // Hardware state
       this.gpsAvailable = false;
       this.gpsAccuracyMeters = null;
       this.gpsWatchId = null;
       this.wakeLock = null;
-
-      // Modo de operación: POR DEFECTO MODO REAL (HARDWARE)
-      this.isSimulating = false;
 
       // Estado de grabación
       this.isRecording = false;
@@ -120,8 +117,6 @@
     }
 
     _handleGpsSuccess(pos) {
-      if (this.isSimulating) return; // Si el usuario forzó modo simulación manual, ignorar hardware
-
       this.gpsAvailable = true;
       const coords = pos.coords;
       const timestamp = pos.timestamp || Date.now();
@@ -242,7 +237,6 @@
       if (this.isRecording) return;
       this.isRecording = true;
       this.recordStartTime = Date.now();
-      this.isSynthetic = !!this.isSimulating;
       this.recordingSessionId = 'session_' + this.recordStartTime + '_' + Math.random().toString(36).slice(2, 8);
       this.elapsedMs = 0;
       this.trackpoints = [];
@@ -320,13 +314,10 @@
       const altitudePoints = this.trackpoints.filter(point => Number.isFinite(point.altitudeM));
       const peakAltitude = altitudePoints.reduce((value, point) => Math.max(value, point.altitudeM), -Infinity);
       const minAltitude = altitudePoints.reduce((value, point) => Math.min(value, point.altitudeM), Infinity);
-      const isSynth = !!(this.isSynthetic || this.isSimulating);
       return {
         id: this.recordingSessionId || ('session_' + this.recordStartTime),
         status,
-        isSynthetic: isSynth,
-        isDemo: isSynth,
-        title: isSynth ? `Ruta Sintética (Demo) ${new Date(this.recordStartTime).toLocaleTimeString()}` : `Ruta GPS Real ${new Date(this.recordStartTime).toLocaleTimeString()}`,
+        title: `Ruta GPS Real ${new Date(this.recordStartTime).toLocaleTimeString()}`,
         startedAt: this.recordStartTime,
         endedAt: status === 'COMPLETED' ? Date.now() : null,
         date: new Date(this.recordStartTime || Date.now()).toISOString(),
@@ -347,16 +338,6 @@
       if (!this.isRecording || !window.RaceWarsSessionStore || this.trackpoints.length === 0) return;
       this.elapsedMs = Math.max(this.elapsedMs, Date.now() - this.recordStartTime);
       await window.RaceWarsSessionStore.save(this._createSessionData('INTERRUPTED'));
-    }
-
-    /**
-     * Activa o desactiva el modo simulación manual para pruebas en estático
-     */
-    setSimulation(enabled) {
-      this.isSimulating = enabled;
-      if (!enabled) {
-        this.startHardwareGps();
-      }
     }
 
     onUpdate(callback) {
@@ -384,7 +365,6 @@
         elevationGain: Math.round(this.elevationGainMeters),
         altHistory: [...this.altHistory],
         isRecording: this.isRecording,
-        isSimulating: this.isSimulating,
         gpsAccuracy: this.gpsAccuracyMeters
       };
 

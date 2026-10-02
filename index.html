@@ -9,8 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@500;700&family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="core/pro-paywall.css">
-  <link rel="stylesheet" href="core/ad-manager.css">
   <link rel="stylesheet" href="core/bluetooth-menu.css">
   <link rel="stylesheet" href="core/permissions-modal.css">
   <link rel="stylesheet" href="core/theme-modal.css">
@@ -46,11 +44,6 @@
         </button>
 
         <div class="hud-profile-mode">
-          <!-- Botón de Estado Freemium / PRO -->
-          <button class="pro-status-pill is-free" id="proStatusBtn" title="Ver suscripción Race Wars Pro" aria-label="Estado Race Wars Pro">
-            <span>★</span>
-            <span id="proStatusText">FREE</span>
-          </button>
           <span class="status-chip live-chip" id="recStatusChip">STANDBY</span>
         </div>
       </header>
@@ -193,23 +186,25 @@
           </div>
         </button>
 
-        <!-- Toggle Auxiliar para Simulación / Demostración / Modales -->
-        <div class="demo-bar">
-          <button class="ghost-toggle" id="themeModalBtn">🎨 Temas y Fondo</button>
-          <button class="ghost-toggle" id="savedRoutesBtn">📁 Rutas Guardadas</button>
-          <button class="ghost-toggle text-lime" id="simToggle">Modo: GPS REAL</button>
-          <button class="ghost-toggle text-lime" id="gpxReplayBtn">▶ Demo sintética</button>
-          <a href="summary.html" class="ghost-toggle" style="text-decoration: none;">Ver Pantalla 3 ➔</a>
-        </div>
-
-        <!-- Banner Publicitario AdMob (Modo Gratuito) -->
-        <div class="admob-free-banner" id="admobBanner">
-          <div class="admob-banner-text">
-            <span class="admob-ad-tag">ANUNCIO</span>
-            <span>Michelin Pilot Sport 4S • Adherencia en curva límite</span>
-          </div>
-          <button class="admob-unlock-link" id="admobUnlockBtn">Quitar Anuncios (PRO)</button>
-        </div>
+        <!-- Barra de Menús Inferior Distribuida -->
+        <nav class="bottom-menu-bar" aria-label="Menú Inferior">
+          <button class="menu-item-btn" id="savedRoutesBtn" title="Rutas Guardadas">
+            <span class="menu-item-icon">📁</span>
+            <span class="menu-item-text">Rutas</span>
+          </button>
+          <button class="menu-item-btn" id="btMenuNavBtn" title="Vincular Dispositivos Bluetooth">
+            <span class="menu-item-icon">📶</span>
+            <span class="menu-item-text">Bluetooth</span>
+          </button>
+          <button class="menu-item-btn" id="themeModalBtn" title="Personalizar Temas y Fondo">
+            <span class="menu-item-icon">🎨</span>
+            <span class="menu-item-text">Temas</span>
+          </button>
+          <a href="summary.html" class="menu-item-btn" id="summaryNavBtn" title="Resumen y Telemetría">
+            <span class="menu-item-icon">📊</span>
+            <span class="menu-item-text">Resumen</span>
+          </a>
+        </nav>
       </section>
     </main>
   </div>
@@ -218,10 +213,6 @@
   <script src="core/session-store.js"></script>
   <script src="core/real-telemetry.js"></script>
   <script src="core/weather-snapshot-pipeline.js"></script>
-  <script src="core/gpx-replay-engine.js"></script>
-  <script src="core/ad-manager.js"></script>
-  <script src="core/pro-manager.js"></script>
-  <script src="core/pro-paywall.js"></script>
   <script src="core/bluetooth-menu.js"></script>
   <script src="core/permissions-modal.js"></script>
   <script src="core/theme-modal.js"></script>

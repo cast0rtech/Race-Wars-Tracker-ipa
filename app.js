@@ -29,15 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const overrideSub = document.getElementById('overrideSub');
   const recStatusChip = document.getElementById('recStatusChip');
 
-  // Aux controls & PRO integration
-  const simToggle = document.getElementById('simToggle');
+  // Aux controls
   const themeToggle = document.getElementById('themeToggle');
   const themeModalBtn = document.getElementById('themeModalBtn');
   const savedRoutesBtn = document.getElementById('savedRoutesBtn');
-  const proStatusBtn = document.getElementById('proStatusBtn');
-  const proStatusText = document.getElementById('proStatusText');
-  const themeProBadge = document.getElementById('themeProBadge');
-  const gpxReplayBtn = document.getElementById('gpxReplayBtn');
+  const btMenuNavBtn = document.getElementById('btMenuNavBtn');
 
   // Weather Card Elements
   const weatherTempVal = document.getElementById('weatherTempVal');
@@ -124,60 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}<small>.${tenths}</small>`;
   }
 
-  // 0. FREEMIUM / PRO UI SYNCHRONIZATION
-  const admobBanner = document.getElementById('admobBanner');
-  const admobUnlockBtn = document.getElementById('admobUnlockBtn');
-
-  function updateProUI() {
-    if (!window.ProManager) return;
-    const isPro = window.ProManager.isPro();
-    if (proStatusBtn && proStatusText) {
-      if (isPro) {
-        proStatusBtn.className = 'pro-status-pill is-pro';
-        proStatusText.textContent = `PRO (${window.ProManager.getRemainingProTime()})`;
-        if (themeProBadge) themeProBadge.style.display = 'none';
-        if (admobBanner) admobBanner.style.display = 'none';
-      } else {
-        proStatusBtn.className = 'pro-status-pill is-free';
-        proStatusText.textContent = 'FREE';
-        if (themeProBadge) themeProBadge.style.display = 'inline-flex';
-        if (admobBanner) admobBanner.style.display = 'flex';
-      }
-    }
-  }
-
-  if (admobUnlockBtn) {
-    admobUnlockBtn.addEventListener('click', () => {
-      if (window.ProManager) {
-        window.ProManager.openPaywall('Elimina los anuncios y desbloquea el modo VIP viendo un vídeo bonificado');
-      }
-    });
-  }
-
-  if (proStatusBtn) {
-    proStatusBtn.addEventListener('click', () => {
-      if (window.ProManager) {
-        window.ProManager.openPaywall('Desbloquea funciones de competición gratis con anuncios');
-      }
-    });
-  }
-
-  window.addEventListener('racewars:pro_status_changed', () => {
-    updateProUI();
-    drawAltimetryGraph();
-  });
-  updateProUI();
-
-  // THEME TOGGLE (PRO EXCLUSIVE FEATURE)
+  // THEME TOGGLE
   if (themeToggle) {
     themeToggle.addEventListener('click', () => {
-      const isPro = window.ProManager ? window.ProManager.isPro() : false;
-      if (!isPro) {
-        if (window.ProManager) {
-          window.ProManager.openPaywall('Desbloquea el tema exclusivo Racing Red con Race Wars PRO');
-        }
-        return;
-      }
       const isRed = document.body.classList.toggle('theme-racing-red');
       themeToggle.innerHTML = isRed ? 'Tema: Racing Red' : 'Tema: Neón Verde';
       drawAltimetryGraph();
@@ -186,12 +131,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 1. GESTIÓN Y MENÚ DE BLUETOOTH DEL COCKPIT
-  btStatusBtn.addEventListener('click', () => {
-    triggerHaptic(40);
-    if (window.BluetoothMenu) {
-      window.BluetoothMenu.open();
-    }
-  });
+  if (btStatusBtn) {
+    btStatusBtn.addEventListener('click', () => {
+      triggerHaptic(40);
+      if (window.BluetoothMenu) {
+        window.BluetoothMenu.open();
+      }
+    });
+  }
+
+  if (btMenuNavBtn) {
+    btMenuNavBtn.addEventListener('click', () => {
+      triggerHaptic(40);
+      if (window.BluetoothMenu) {
+        window.BluetoothMenu.open();
+      }
+    });
+  }
 
   window.addEventListener('racewars:bluetooth_changed', (e) => {
     const btSettings = e.detail;
@@ -367,19 +323,10 @@ document.addEventListener('DOMContentLoaded', () => {
       recStatusChip.style.color = '#ffffff';
     } else {
       // Detener grabación real y guardar sesión
-      let session;
       try {
-        session = await telemetry.stopRecording();
+        await telemetry.stopRecording();
       } catch (error) {
         console.error('[Telemetry] No se pudo guardar la sesión:', error);
-        overrideBtn.classList.remove('active-rec');
-        overrideText.textContent = 'START ROUTE';
-        overrideSub.textContent = 'PULSAR PARA REGISTRO';
-        recStatusChip.classList.remove('active-recording');
-        recStatusChip.textContent = 'SESIÓN SIN GUARDAR';
-        recStatusChip.style.color = 'var(--neon-red)';
-        if (window.ProPaywallModal) window.ProPaywallModal.showToast('No se pudo guardar la sesión. Comprueba el espacio disponible en el dispositivo.');
-        return;
       }
       overrideBtn.classList.remove('active-rec');
       overrideText.textContent = 'START ROUTE';
@@ -387,100 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
       recStatusChip.classList.remove('active-recording');
       recStatusChip.textContent = 'STANDBY';
       recStatusChip.style.color = 'var(--neon-lime)';
-
-      if (window.ProPaywallModal) {
-        window.ProPaywallModal.showToast(`✓ Ruta de ${session.distanceKm} km guardada con ${session.trackpointsCount} puntos GPS.`);
-      }
     }
   });
-
-  // 5. MODO SIMULACIÓN MANUAL (OPCIONAL PARA PROBAR EN ESTÁTICO)
-  let simInterval = null;
-  let simSpeed = 110;
-  let simAlt = 720;
-  let simDist = 0;
-  let simElapsed = 0;
-
-  simToggle.addEventListener('click', () => {
-    const isNowSim = !telemetry.isSimulating;
-    telemetry.setSimulation(isNowSim);
-
-    if (isNowSim) {
-      simToggle.textContent = 'Modo: Simulación (Demo)';
-      simToggle.classList.remove('text-lime');
-      simToggle.style.color = 'var(--neon-yellow)';
-      recStatusChip.textContent = 'SIMULADOR DEMO';
-
-      simInterval = setInterval(() => {
-        simSpeed = Math.min(220, Math.max(40, simSpeed + (Math.random() - 0.48) * 8));
-        simAlt += (Math.random() - 0.45) * 2;
-        simDist += (simSpeed / 3600) * 0.1;
-        simElapsed += 100;
-
-        mainSpeed.textContent = Math.round(simSpeed);
-        updateSpeedGauge(simSpeed);
-        distanceVal.textContent = simDist.toFixed(2);
-        timeVal.innerHTML = formatTime(simElapsed);
-        currentAlt.textContent = `${Math.round(simAlt)} m`;
-        elevGainVal.textContent = `+${Math.round(simDist * 22)}`;
-
-        if (telemetry.altHistory.length > 0) {
-          telemetry.altHistory.shift();
-          telemetry.altHistory.push(Math.round(simAlt));
-          drawAltimetryGraph();
-        }
-      }, 100);
-    } else {
-      if (simInterval) clearInterval(simInterval);
-      simInterval = null;
-      simToggle.textContent = 'Modo: GPS REAL';
-      simToggle.classList.add('text-lime');
-      simToggle.style.color = 'var(--neon-lime)';
-      recStatusChip.textContent = 'CONECTANDO GPS...';
-      telemetry.startHardwareGps();
-    }
-  });
-
-  // 6. DEMO SINTÉTICA (NO ES UNA RUTA GPS NI SE GUARDA COMO SESIÓN)
-  if (gpxReplayBtn && window.GPXReplayEngine && window.SensorFusionEngine) {
-    const replayEngine = new window.GPXReplayEngine({ speedMultiplier: 8.0 });
-    const fusionEngine = new window.SensorFusionEngine({ hysteresisThreshold: 3.0 });
-
-    replayEngine.onLocationUpdate((sample) => {
-      const fusion = fusionEngine.update({
-        timestamp: sample.timestamp,
-        gpsAltitude: sample.altitude,
-        gpsAccuracyV: sample.accuracyV,
-        baroPressureHpa: sample.barometerHpa
-      });
-
-      mainSpeed.textContent = sample.speedKmh;
-      updateSpeedGauge(sample.speedKmh);
-      currentAlt.textContent = `${Math.round(fusion.fusedAltitude)} m`;
-      elevGainVal.textContent = `+${fusion.elevationGain}`;
-      distanceVal.textContent = sample.distanceKm.toFixed(2);
-
-      telemetry.altHistory.shift();
-      telemetry.altHistory.push(Math.round(fusion.fusedAltitude));
-      drawAltimetryGraph();
-    });
-
-    gpxReplayBtn.addEventListener('click', () => {
-      if (replayEngine.isPlaying) {
-        replayEngine.stopReplay();
-        gpxReplayBtn.textContent = '▶ Demo sintética (no GPS)';
-        gpxReplayBtn.style.color = 'var(--neon-lime)';
-        telemetry.setSimulation(false);
-      } else {
-        telemetry.setSimulation(true);
-        if (simInterval) clearInterval(simInterval);
-        replayEngine.startReplay(8.0);
-        gpxReplayBtn.textContent = '⏸ Detener demo sintética';
-        gpxReplayBtn.style.color = 'var(--neon-yellow)';
-        simToggle.textContent = 'Modo: GPX Replay';
-      }
-    });
-  }
 
   // Render inicial en reposo (0 km/h, esperando GPS)
   updateSpeedGauge(0);

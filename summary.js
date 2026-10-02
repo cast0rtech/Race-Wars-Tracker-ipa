@@ -46,12 +46,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         typeBadge.style.color = '#00e5ff';
         typeBadge.style.background = 'rgba(0, 229, 255, 0.15)';
         typeBadge.textContent = `🗺️ ROADTRIP COMBINADO · ${(session.mergedRouteIds || []).length} RUTAS FUSIONADAS EN TRAYECTO UNIFICADO`;
-      } else if (isSynth) {
-        typeBadge.style.display = 'block';
-        typeBadge.style.borderColor = '#ffdd00';
-        typeBadge.style.color = '#ffdd00';
-        typeBadge.style.background = 'rgba(255, 221, 0, 0.15)';
-        typeBadge.textContent = '⚠️ DEMO SINTÉTICA · DATOS SIMULADOS (NO ES UNA RUTA REAL GPS)';
       } else if (session.status === 'INTERRUPTED' || session.status === 'CRASH_RECOVERED') {
         typeBadge.style.display = 'block';
         typeBadge.style.borderColor = '#ff9900';
@@ -162,10 +156,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const option = document.createElement('option');
       option.value = session.id;
       const date = new Date(session.startedAt || session.date);
-      const isSynth = session.isSynthetic || session.isDemo;
-      const synthTag = isSynth ? ' [DEMO]' : '';
       const status = session.status && session.status !== 'COMPLETED' ? ' [INTERRUMPIDA]' : '';
-      option.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${Number(session.distanceKm || 0).toFixed(2)} km${synthTag}${status}`;
+      option.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${Number(session.distanceKm || 0).toFixed(2)} km${status}`;
       selector.appendChild(option);
     });
     selector.value = currentSession?.id || '';

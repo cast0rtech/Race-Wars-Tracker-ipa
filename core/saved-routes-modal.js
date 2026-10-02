@@ -22,7 +22,10 @@
     }
 
     _buildModal() {
-      if (document.getElementById('rwRoutesModalBackdrop')) return;
+      if (document.getElementById('rwRoutesModalBackdrop')) {
+        this.backdrop = document.getElementById('rwRoutesModalBackdrop');
+        return;
+      }
 
       const backdrop = document.createElement('div');
       backdrop.id = 'rwRoutesModalBackdrop';
@@ -157,8 +160,6 @@
         card.className = `route-item-card ${isRoadtrip ? 'is-roadtrip' : ''}`;
 
         const isChecked = this.selectedRouteIds.has(session.id);
-        const isSynth = session.isSynthetic || session.isDemo;
-        const synthTag = isSynth ? '<span style="font-size: 0.65rem; color: #ffdd00; border: 1px solid #ffdd00; padding: 1px 4px; border-radius: 4px; margin-left: 6px;">DEMO</span>' : '';
         const rtBadge = isRoadtrip ? `<span style="font-size: 0.65rem; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); padding: 1px 6px; border-radius: 4px; margin-left: 6px;">🗺️ ROADTRIP (${(session.mergedRouteIds || []).length} RUTAS)</span>` : '';
 
         const checkboxHtml = !isRoadtrip ? `<input type="checkbox" class="route-select-checkbox" data-id="${session.id}" ${isChecked ? 'checked' : ''} title="Seleccionar para fusionar en Roadtrip">` : '';
@@ -167,7 +168,7 @@
           <div class="route-card-header">
             <div class="route-card-header-left">
               ${checkboxHtml}
-              <span class="route-card-date">${session.title || dateStr} ${synthTag}${rtBadge}</span>
+              <span class="route-card-date">${session.title || dateStr} ${rtBadge}</span>
             </div>
             <span class="route-card-time">${timeStr}</span>
           </div>
@@ -386,14 +387,16 @@
 
     async open() {
       if (!this.backdrop) this._buildModal();
+      if (!this.backdrop) this.backdrop = document.getElementById('rwRoutesModalBackdrop');
       this.selectedRouteIds.clear();
       this.activeTab = 'individual';
       this._updateTabUI();
       await this._loadSessions();
-      this.backdrop.classList.add('is-visible');
+      if (this.backdrop) this.backdrop.classList.add('is-visible');
     }
 
     close() {
+      if (!this.backdrop) this.backdrop = document.getElementById('rwRoutesModalBackdrop');
       if (this.backdrop) this.backdrop.classList.remove('is-visible');
     }
   }

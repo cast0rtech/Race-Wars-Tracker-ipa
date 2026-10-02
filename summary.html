@@ -10,8 +10,6 @@
 
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="summary.css">
-  <link rel="stylesheet" href="core/pro-paywall.css">
-  <link rel="stylesheet" href="core/ad-manager.css">
   <link rel="stylesheet" href="core/theme-modal.css">
   <link rel="stylesheet" href="core/gpx-share-modal.css">
 </head>
@@ -33,17 +31,12 @@
           <h1 class="summary-main-title">Resumen del Trayecto</h1>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button class="pro-status-pill is-free" id="proStatusBtn" title="Ver suscripción Race Wars Pro" aria-label="Estado Race Wars Pro">
-            <span>★</span>
-            <span id="proStatusText">FREE</span>
-          </button>
           <div class="route-date-badge"><span id="routeDate">Sin sesión seleccionada</span></div>
         </div>
       </header>
 
       <!-- Scrollable Report Body -->
       <div class="summary-scroll-content">
-        <div id="sessionTypeBadge" style="display:none; margin: 0 0 12px 0; font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; padding: 8px 14px; border-radius: 6px; background: rgba(255, 221, 0, 0.15); color: #ffdd00; border: 1px solid #ffdd00; text-transform: uppercase; letter-spacing: 0.5px;"></div>
 
         <!-- 1. MAPA ESTÁTICO SUPERIOR CON TRAZADO NEÓN -->
         <section class="static-map-card">
@@ -217,9 +210,6 @@
   </div>
 
   <script src="core/session-store.js"></script>
-  <script src="core/ad-manager.js"></script>
-  <script src="core/pro-manager.js"></script>
-  <script src="core/pro-paywall.js"></script>
   <script src="core/theme-modal.js"></script>
   <script src="core/gpx-share-modal.js"></script>
   <script src="summary.js"></script>

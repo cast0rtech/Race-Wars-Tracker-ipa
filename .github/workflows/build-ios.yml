@@ -1,0 +1,63 @@
+name: Build iOS App (.IPA)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Compile iOS Application
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Prepare Web Distribution
+        run: node scripts/prepare-web.js
+
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: |
+          cd ios/App
+          pod install
+
+      - name: Build Xcode Archive (Unsigned IPA)
+        run: |
+          cd ios/App
+          xcodebuild clean archive \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/App.xcarchive \
+            CODE_SIGNING_ALLOWED="NO" \
+            CODE_SIGNING_REQUIRED="NO" \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package Payload into IPA
+        run: |
+          cd ios/App
+          mkdir -p build/Payload
+          cp -r build/App.xcarchive/Products/Applications/App.app build/Payload/
+          cd build
+          zip -r -q RaceWarsTracker.ipa Payload
+
+      - name: Upload IPA as Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RaceWarsTracker-iOS-IPA
+          path: ios/App/build/RaceWarsTracker.ipa
+          retention-days: 14

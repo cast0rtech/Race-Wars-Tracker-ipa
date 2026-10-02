@@ -9,43 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const weatherIconBox = document.getElementById('weatherIconBox');
   const renderCanvasBtn = document.getElementById('renderCanvasBtn');
   const exportCanvas = document.getElementById('exportCanvas');
-  const proStatusBtn = document.getElementById('proStatusBtn');
-  const proStatusText = document.getElementById('proStatusText');
-  const cardMetaTag = document.getElementById('cardMetaTag');
 
-  // Freemium Status Synchronization
-  function updateProUI() {
-    if (!window.ProManager) return;
-    const isPro = window.ProManager.isPro();
-    if (proStatusBtn && proStatusText) {
-      if (isPro) {
-        proStatusBtn.className = 'pro-status-pill is-pro';
-        proStatusText.textContent = 'PRO VIP';
-        if (cardMetaTag) {
-          cardMetaTag.innerHTML = '★ RACE WARS PRO';
-          cardMetaTag.style.color = '#ffdd00';
-        }
-      } else {
-        proStatusBtn.className = 'pro-status-pill is-free';
-        proStatusText.textContent = 'FREE';
-        if (cardMetaTag) {
-          cardMetaTag.textContent = 'RACE WARS TRACKER';
-          cardMetaTag.style.color = '';
-        }
-      }
-    }
-  }
 
-  if (proStatusBtn) {
-    proStatusBtn.addEventListener('click', () => {
-      if (window.ProManager) {
-        window.ProManager.openPaywall('Desbloquea exportación 4K sin marcas de agua con Race Wars PRO');
-      }
-    });
-  }
-
-  window.addEventListener('racewars:pro_status_changed', updateProUI);
-  updateProUI();
 
   // Meteorological Presets Data
   const presets = {
@@ -240,16 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.textAlign = 'center';
     ctx.fillText('GPS: 40.7812° N, 4.0156° W • LOGGED DATA OK', width / 2, height - 120);
 
-    // 8. Watermark (Free vs Pro)
-    const isPro = window.ProManager ? window.ProManager.isPro() : false;
+    // 8. Watermark
     ctx.font = '700 24px "Orbitron", sans-serif';
-    if (isPro) {
-      ctx.fillStyle = 'rgba(255, 221, 0, 0.7)';
-      ctx.fillText('★ RACE WARS PRO • VERIFIED TELEMETRY SNAPSHOT', width / 2, height - 70);
-    } else {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.fillText('RACE WARS TRACKER • FREE EDITION (UNLOCK PRO FOR CLEAN 4K)', width / 2, height - 70);
-    }
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fillText('RACE WARS TRACKER • VERIFIED TELEMETRY SNAPSHOT', width / 2, height - 70);
 
     // Trigger PNG Download
     const dataUrl = exportCanvas.toDataURL('image/png');

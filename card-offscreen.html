@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,700&family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="card-offscreen.css">
-  <link rel="stylesheet" href="core/pro-paywall.css">
 </head>
 <body>
   <!-- Controls Panel (Top Bar in Sandbox View) -->
@@ -26,10 +25,6 @@
         <option value="snow">Nieve / Hielo en Cumbre (-2°C - 74 km/h)</option>
         <option value="fog">Niebla Densa (9°C - 88 km/h)</option>
       </select>
-      <button class="pro-status-pill is-free" id="proStatusBtn" title="Ver suscripción Race Wars Pro" aria-label="Estado Race Wars Pro">
-        <span>★</span>
-        <span id="proStatusText">FREE</span>
-      </button>
       <button id="renderCanvasBtn" class="tool-action-btn">📸 Generar PNG (1080x1920)</button>
     </div>
   </aside>
@@ -123,8 +118,6 @@
   <!-- Hidden Canvas for Full-Resolution 1080x1920 Export -->
   <canvas id="exportCanvas" width="1080" height="1920" style="display: none;"></canvas>
 
-  <script src="core/pro-manager.js"></script>
-  <script src="core/pro-paywall.js"></script>
   <script src="card-offscreen.js"></script>
 </body>
 </html>
