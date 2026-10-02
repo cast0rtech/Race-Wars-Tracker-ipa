@@ -1,5 +1,5 @@
 /**
- * Race Wars Tracker - GPX Export & Share Dialog Manager
+ * Race Wars Tracker - GPX Export & Social Share Dialog Manager
  */
 (function () {
   'use strict';
@@ -30,8 +30,8 @@
         <div class="gpx-modal-container" role="dialog" aria-modal="true" aria-labelledby="gpxModalTitle">
           <div class="gpx-modal-header">
             <div class="gpx-modal-title-box">
-              <span style="font-size: 1.2rem;">📦</span>
-              <h2 class="gpx-modal-title" id="gpxModalTitle">EXPORTAR / ENVIAR GPX</h2>
+              <span style="font-size: 1.2rem;">📤</span>
+              <h2 class="gpx-modal-title" id="gpxModalTitle">COMPARTIR Y EXPORTAR</h2>
             </div>
             <button class="gpx-modal-close" id="rwGpxClose" aria-label="Cerrar modal">
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
@@ -47,26 +47,45 @@
               <span class="gpx-info-title" id="gpxPreviewDate">02 oct 2026</span>
               <span class="gpx-info-sub" id="gpxPreviewSub">0.0 km · 0 puntos GPS</span>
             </div>
-            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); font-weight: 700;">GPX 1.1</span>
+            <span style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent); font-weight: 700;">GPX / JSON</span>
+          </div>
+
+          <!-- Social Quick Share Bar -->
+          <div class="gpx-social-section">
+            <span class="gpx-section-label">COMPARTIR TELEMETRÍA POR APPS</span>
+            <div class="gpx-social-grid">
+              <button class="gpx-social-btn whatsapp" id="shareWhatsapp" title="Compartir en WhatsApp">
+                <span class="social-icon">💬</span> WhatsApp
+              </button>
+              <button class="gpx-social-btn telegram" id="shareTelegram" title="Compartir en Telegram">
+                <span class="social-icon">✈️</span> Telegram
+              </button>
+              <button class="gpx-social-btn email" id="shareEmail" title="Enviar por Email">
+                <span class="social-icon">✉️</span> Email
+              </button>
+              <button class="gpx-social-btn copy" id="shareCopyText" title="Copiar al Portapapeles">
+                <span class="social-icon">📋</span> Copiar
+              </button>
+            </div>
           </div>
 
           <!-- Action Choices -->
           <div class="gpx-options-grid">
-            <!-- Choice 1: Save to Chosen Folder -->
-            <div class="gpx-action-card" id="actionSaveFolder">
-              <div class="gpx-action-icon">📁</div>
-              <div class="gpx-action-text">
-                <span class="gpx-action-title">Guardar en carpeta a elegir</span>
-                <span class="gpx-action-desc">Selecciona la carpeta de destino en tu dispositivo o tarjeta SD</span>
-              </div>
-            </div>
-
-            <!-- Choice 2: Share / Send via App -->
+            <!-- Choice 1: System / App Native Share -->
             <div class="gpx-action-card" id="actionShareApp">
               <div class="gpx-action-icon">📲</div>
               <div class="gpx-action-text">
-                <span class="gpx-action-title">Enviar / Compartir por App</span>
-                <span class="gpx-action-desc">Enviar por WhatsApp, Telegram, Google Drive, Gmail o Bluetooth</span>
+                <span class="gpx-action-title">Compartir por Sistema / App</span>
+                <span class="gpx-action-desc">Abrir el menú de compartir de Android/dispositivo con archivo y texto</span>
+              </div>
+            </div>
+
+            <!-- Choice 2: Save GPX File -->
+            <div class="gpx-action-card" id="actionSaveFolder">
+              <div class="gpx-action-icon">📁</div>
+              <div class="gpx-action-text">
+                <span class="gpx-action-title">Guardar GPX en carpeta</span>
+                <span class="gpx-action-desc">Descargar o guardar el trazado GPX en tu dispositivo</span>
               </div>
             </div>
 
@@ -79,6 +98,8 @@
               </div>
             </div>
           </div>
+
+          <div id="gpxModalToast" class="gpx-toast-msg"></div>
         </div>
       `;
 
@@ -148,6 +169,31 @@
       return new Blob([...localParts, ...centralParts, end], { type: 'application/zip' });
     }
 
+    _getTelemetryText(session) {
+      if (!session) return 'Race Wars Tracker Telemetry Data';
+      const d = new Date(session.startedAt || session.date || Date.now());
+      const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      const dist = Number(session.distanceKm || 0).toFixed(2);
+      const avgSpd = Math.round(session.avgSpeedKmh || 0);
+      const maxSpd = Math.round(session.maxSpeedKmh || 0);
+      const elevGain = session.elevationGainM != null ? `+${Math.round(session.elevationGainM)}m` : '—';
+      const points = (session.trackpoints || []).length;
+      const title = session.title || 'Sesión de Telemetría';
+
+      return `🏎️ RACE WARS TRACKER - ${title.toUpperCase()}\n📅 Fecha: ${dateStr}\n📏 Distancia: ${dist} km\n⚡ Vel. Máxima: ${maxSpd} km/h\n📊 Vel. Media: ${avgSpd} km/h\n📈 Desnivel: ${elevGain}\n📡 Puntos GPS: ${points}\n\n🏁 Grabado con Race Wars Tracker v2.0`;
+    }
+
+    _showToast(msg) {
+      const toast = document.getElementById('gpxModalToast');
+      if (toast) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3500);
+      } else if (window.ProPaywallModal) {
+        window.ProPaywallModal.showToast(msg);
+      }
+    }
+
     async _saveToFolder(file) {
       // 1. Try File System Access API showSaveFilePicker if available
       if (typeof window.showSaveFilePicker === 'function') {
@@ -162,7 +208,7 @@
           const writable = await handle.createWritable();
           await writable.write(file);
           await writable.close();
-          if (window.ProPaywallModal) window.ProPaywallModal.showToast(`✓ Archivo guardado correctamente en la carpeta elegida.`);
+          this._showToast(`✓ Archivo guardado correctamente en la carpeta elegida.`);
           return;
         } catch (err) {
           if (err.name === 'AbortError') return; // User canceled picker
@@ -178,16 +224,20 @@
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
-      if (window.ProPaywallModal) window.ProPaywallModal.showToast(`✓ Archivo descárgado: ${file.name}`);
+      this._showToast(`✓ Descargando archivo: ${file.name}`);
     }
 
     async _shareViaApp(file) {
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      const session = this.currentSession;
+      const text = this._getTelemetryText(session);
+
+      // 1. Try Capacitor Native Share Plugin if present
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share) {
         try {
-          await navigator.share({
-            files: [file],
-            title: file.name,
-            text: `Ruta GPX grabada con Race Wars Tracker`
+          await window.Capacitor.Plugins.Share.share({
+            title: session?.title || 'Race Wars Tracker',
+            text: text,
+            dialogTitle: 'Compartir Telemetría de Carrera'
           });
           return;
         } catch (err) {
@@ -195,8 +245,35 @@
         }
       }
 
-      // Fallback if native sharing is unsupported
-      alert('Tu navegador no soporta el menú directo de compartir archivos. Te ofrecemos la descarga directa.');
+      // 2. Try Web Share API with file support
+      if (navigator.share) {
+        try {
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: file.name,
+              text: text
+            });
+            return;
+          } else {
+            await navigator.share({
+              title: session?.title || 'Race Wars Tracker',
+              text: text
+            });
+            this._showToast('✓ Texto compartido. Te descargamos el archivo GPX.');
+            await this._saveToFolder(file);
+            return;
+          }
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+
+      // 3. Fallback: Copy to clipboard & trigger download
+      try {
+        await navigator.clipboard.writeText(text);
+        this._showToast('✓ Resumen copiado al portapapeles. Guardando archivo GPX...');
+      } catch (_) {}
       await this._saveToFolder(file);
     }
 
@@ -206,11 +283,56 @@
       const actionShareApp = document.getElementById('actionShareApp');
       const actionExportZip = document.getElementById('actionExportZip');
 
+      const btnWhatsapp = document.getElementById('shareWhatsapp');
+      const btnTelegram = document.getElementById('shareTelegram');
+      const btnEmail = document.getElementById('shareEmail');
+      const btnCopyText = document.getElementById('shareCopyText');
+
       if (closeBtn) closeBtn.addEventListener('click', () => this.close());
       this.backdrop.addEventListener('click', (e) => {
         if (e.target === this.backdrop) this.close();
       });
 
+      // Social buttons
+      if (btnWhatsapp) {
+        btnWhatsapp.addEventListener('click', () => {
+          if (!this.currentSession) return;
+          const text = this._getTelemetryText(this.currentSession);
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        });
+      }
+
+      if (btnTelegram) {
+        btnTelegram.addEventListener('click', () => {
+          if (!this.currentSession) return;
+          const text = this._getTelemetryText(this.currentSession);
+          window.open(`https://t.me/share/url?url=${encodeURIComponent('https://racewarstracker.app')}&text=${encodeURIComponent(text)}`, '_blank');
+        });
+      }
+
+      if (btnEmail) {
+        btnEmail.addEventListener('click', () => {
+          if (!this.currentSession) return;
+          const text = this._getTelemetryText(this.currentSession);
+          const title = this.currentSession.title || 'Ruta Race Wars Tracker';
+          window.location.href = `mailto:?subject=${encodeURIComponent('Telemetría Race Wars: ' + title)}&body=${encodeURIComponent(text)}`;
+        });
+      }
+
+      if (btnCopyText) {
+        btnCopyText.addEventListener('click', async () => {
+          if (!this.currentSession) return;
+          const text = this._getTelemetryText(this.currentSession);
+          try {
+            await navigator.clipboard.writeText(text);
+            this._showToast('✓ Resumen de telemetría copiado al portapapeles');
+          } catch (e) {
+            this._showToast('No se pudo copiar automáticamente');
+          }
+        });
+      }
+
+      // Action cards
       if (actionSaveFolder) {
         actionSaveFolder.addEventListener('click', async () => {
           if (!this.currentSession) return;
@@ -270,3 +392,4 @@
 
   window.GpxShareModal = new GpxShareModal();
 })();
+

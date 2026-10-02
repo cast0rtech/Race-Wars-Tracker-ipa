@@ -227,18 +227,21 @@
 .hl-card {
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
-  border-radius: 12px;
-  padding: 10px 12px;
-  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 10px 14px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .hl-card:hover {
   border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .hl-span-1 {
@@ -258,19 +261,20 @@
 }
 
 .hl-label {
-  font-family: var(--font-data);
+  font-family: var(--font-tech);
   font-size: 0.68rem;
   color: var(--text-muted);
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
 .hl-chip {
   font-family: var(--font-mono);
   font-size: 0.58rem;
   background: rgba(255, 255, 255, 0.06);
-  padding: 1px 4px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
   color: var(--text-muted);
 }
 
@@ -283,9 +287,9 @@
 .hl-num {
   font-family: var(--font-display);
   font-size: 1.55rem;
-  font-weight: 900;
-  color: var(--neon-lime);
-  text-shadow: 0 0 10px var(--neon-lime-glow);
+  font-weight: 800;
+  color: var(--tesla-cyan);
+  text-shadow: 0 0 12px var(--tesla-cyan-glow);
   line-height: 1;
 }
 
@@ -295,8 +299,8 @@
 }
 
 .text-cyan {
-  color: var(--neon-cyan) !important;
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.4) !important;
+  color: var(--tesla-cyan) !important;
+  text-shadow: 0 0 10px var(--tesla-cyan-glow) !important;
 }
 
 .hl-span-third .hl-num {
@@ -304,9 +308,9 @@
 }
 
 .hl-unit {
-  font-family: var(--font-data);
+  font-family: var(--font-tech);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
@@ -334,25 +338,26 @@
 }
 
 .weather-capture-card {
-  min-width: 122px;
-  max-width: 125px;
+  min-width: 125px;
+  max-width: 130px;
   flex-shrink: 0;
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
-  border-radius: 12px;
-  padding: 7px;
+  border-radius: 14px;
+  padding: 8px;
   scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   gap: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
 }
 
 .weather-capture-card:hover, .weather-capture-card.active-inspect {
-  border-color: var(--neon-lime);
-  background: rgba(18, 25, 36, 0.9);
-  box-shadow: 0 0 14px rgba(57, 255, 20, 0.2);
+  border-color: var(--tesla-cyan);
+  background: rgba(22, 30, 44, 0.9);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);
 }
 
 .capture-map-frame {
@@ -373,25 +378,25 @@
 
 .map-thumb-1 {
   background: 
-    radial-gradient(circle at 30% 60%, rgba(57, 255, 20, 0.4), transparent 50%),
+    radial-gradient(circle at 30% 60%, rgba(0, 229, 255, 0.4), transparent 50%),
     linear-gradient(45deg, #090c12, #141b26);
 }
 
 .map-thumb-2 {
   background: 
-    radial-gradient(circle at 60% 40%, rgba(57, 255, 20, 0.5), transparent 50%),
+    radial-gradient(circle at 60% 40%, rgba(0, 229, 255, 0.5), transparent 50%),
     linear-gradient(135deg, #070a10, #162030);
 }
 
 .map-thumb-3 {
   background: 
-    radial-gradient(circle at 80% 30%, rgba(255, 30, 68, 0.4), transparent 50%),
+    radial-gradient(circle at 80% 30%, rgba(232, 33, 39, 0.4), transparent 50%),
     linear-gradient(45deg, #0a0e16, #1b1622);
 }
 
 .map-thumb-4 {
   background: 
-    radial-gradient(circle at 20% 70%, rgba(0, 240, 255, 0.4), transparent 50%),
+    radial-gradient(circle at 20% 70%, rgba(0, 229, 255, 0.4), transparent 50%),
     linear-gradient(135deg, #0a0d14, #121924);
 }
 
@@ -404,7 +409,7 @@
   background: rgba(0, 0, 0, 0.75);
   color: #fff;
   padding: 1px 4px;
-  border-radius: 3px;
+  border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -445,7 +450,7 @@
 }
 
 .w-hum {
-  font-family: var(--font-data);
+  font-family: var(--font-tech);
   font-size: 0.6rem;
   color: var(--text-muted);
 }
@@ -460,25 +465,23 @@
 .export-zip-btn {
   width: 100%;
   height: 64px;
-  border-radius: 14px;
-  background: #090e15;
-  border: 2px solid transparent;
-  background-image: linear-gradient(#090e15, #090e15), linear-gradient(90deg, #00f0ff, #39ff14);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(16, 22, 32, 0.95) 0%, rgba(24, 34, 50, 0.95) 100%);
+  border: 1px solid rgba(0, 229, 255, 0.4);
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 22px rgba(57, 255, 20, 0.25), 0 0 10px rgba(0, 240, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 229, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .export-zip-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 32px rgba(57, 255, 20, 0.4), 0 0 15px rgba(0, 240, 255, 0.3);
+  border-color: var(--tesla-cyan);
+  box-shadow: 0 12px 32px rgba(0, 229, 255, 0.35);
 }
 
 .export-zip-btn:active {
@@ -495,14 +498,14 @@
 .export-icon-box {
   width: 38px;
   height: 38px;
-  border-radius: 8px;
-  background: rgba(57, 255, 20, 0.12);
-  border: 1px solid var(--neon-lime);
+  border-radius: 10px;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid var(--tesla-cyan);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--neon-lime);
-  filter: drop-shadow(0 0 6px var(--neon-lime));
+  color: var(--tesla-cyan);
+  filter: drop-shadow(0 0 6px var(--tesla-cyan));
 }
 
 .export-text-stack {
@@ -514,20 +517,20 @@
 .export-main-label {
   font-family: var(--font-display);
   font-size: 1.05rem;
-  font-weight: 900;
-  letter-spacing: 2px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
   color: #ffffff;
   line-height: 1.1;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .export-sub-label {
   font-family: var(--font-tech);
   font-size: 0.65rem;
   letter-spacing: 1px;
-  color: var(--neon-cyan);
+  color: var(--tesla-cyan);
   font-weight: 600;
 }
+
 
 /* Progress track inside export button */
 .export-progress-track {

@@ -108,10 +108,105 @@
   color: var(--text-muted);
 }
 
+.gpx-social-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.gpx-section-label {
+  font-family: var(--font-tech);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.gpx-social-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.gpx-social-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--text-main);
+  font-family: var(--font-tech);
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gpx-social-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.gpx-social-btn.whatsapp:hover {
+  border-color: #25d366;
+  background: rgba(37, 211, 102, 0.15);
+  color: #25d366;
+}
+
+.gpx-social-btn.telegram:hover {
+  border-color: #0088cc;
+  background: rgba(0, 136, 204, 0.15);
+  color: #0088cc;
+}
+
+.gpx-social-btn.email:hover {
+  border-color: #ff9900;
+  background: rgba(255, 153, 0, 0.15);
+  color: #ff9900;
+}
+
+.gpx-social-btn.copy:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+.gpx-toast-msg {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #111a24;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-tech);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.gpx-toast-msg.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .gpx-options-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 4px;
 }
 
 .gpx-action-card {
@@ -167,3 +262,5 @@
   font-size: 0.7rem;
   color: var(--text-muted);
 }
+
+

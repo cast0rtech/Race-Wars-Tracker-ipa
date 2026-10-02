@@ -1,60 +1,70 @@
 :root {
-  /* Racing Dark Theme Tokens */
-  --bg-deep: #06080b;
-  --bg-surface: #0c1017;
-  --bg-card: rgba(16, 22, 32, 0.75);
+  /* Tesla Minimalist Dark Theme Tokens */
+  --bg-deep: #0b0e14;
+  --bg-surface: #121620;
+  --bg-card: rgba(18, 23, 34, 0.72);
   --bg-card-border: rgba(255, 255, 255, 0.08);
 
-  /* High-Contrast Neon Highlights */
-  --neon-lime: #39ff14;
-  --neon-lime-glow: rgba(57, 255, 20, 0.45);
-  --neon-red: #ff1e44;
-  --neon-red-glow: rgba(255, 30, 68, 0.55);
-  --neon-yellow: #ffdd00;
-  --neon-cyan: #00e5ff;
-  --neon-silver: #e2e8f0;
+  /* Tesla Automotive Color Accents */
+  --tesla-red: #e82127;
+  --tesla-red-glow: rgba(232, 33, 39, 0.4);
+  --tesla-cyan: #00e5ff;
+  --tesla-cyan-glow: rgba(0, 229, 255, 0.35);
+  --tesla-emerald: #00e676;
+  --tesla-amber: #f59e0b;
+  --tesla-silver: #cbd5e1;
+  --tesla-white: #ffffff;
 
-  /* Current Active Accent (Default: Lime) */
-  --accent: var(--neon-lime);
-  --accent-glow: var(--neon-lime-glow);
+  /* Accent Mappings (Default: Tesla Cyan) */
+  --neon-lime: var(--tesla-cyan);
+  --neon-lime-glow: var(--tesla-cyan-glow);
+  --neon-red: var(--tesla-red);
+  --neon-red-glow: var(--tesla-red-glow);
+  --neon-yellow: var(--tesla-amber);
+  --neon-cyan: var(--tesla-cyan);
+  --neon-silver: var(--tesla-silver);
 
-  /* Typography */
-  --font-mono: 'Share Tech Mono', 'Courier New', monospace;
-  --font-display: 'Orbitron', -apple-system, sans-serif;
-  --font-tech: 'Chakra Petch', sans-serif;
-  --font-data: 'Rajdhani', sans-serif;
+  /* Current Active Accent */
+  --accent: var(--tesla-cyan);
+  --accent-glow: var(--tesla-cyan-glow);
 
-  --text-main: #f3f6fc;
-  --text-muted: #8a99ad;
-  --text-dim: #4a5768;
-}
+  /* Tesla Clean Typography System */
+  --font-mono: 'Space Grotesk', 'Share Tech Mono', monospace;
+  --font-display: 'Outfit', 'Inter', -apple-system, sans-serif;
+  --font-tech: 'Inter', -apple-system, sans-serif;
+  --font-data: 'Inter', sans-serif;
 
-/* Light Theme Variables (Fondo Claro) */
-body.theme-light, [data-theme="light"] {
-  --bg-deep: #eef2f7;
-  --bg-surface: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.88);
-  --bg-card-border: rgba(0, 0, 0, 0.12);
-  --text-main: #0f172a;
-  --text-muted: #475569;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
   --text-dim: #64748b;
 }
 
+/* Tesla Clean Light Theme (Fondo Claro Estilo Pantalla Tesla) */
+body.theme-light, [data-theme="light"] {
+  --bg-deep: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card-border: rgba(0, 0, 0, 0.08);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+}
+
 body.theme-racing-red {
-  --accent: var(--neon-red);
-  --accent-glow: var(--neon-red-glow);
+  --accent: var(--tesla-red);
+  --accent-glow: var(--tesla-red-glow);
 }
 body.theme-cyber-cyan {
-  --accent: var(--neon-cyan);
-  --accent-glow: rgba(0, 229, 255, 0.45);
+  --accent: var(--tesla-cyan);
+  --accent-glow: var(--tesla-cyan-glow);
 }
 body.theme-amber-gold {
-  --accent: var(--neon-yellow);
-  --accent-glow: rgba(255, 221, 0, 0.45);
+  --accent: var(--tesla-amber);
+  --accent-glow: rgba(245, 158, 11, 0.4);
 }
 body.theme-stealth-silver {
-  --accent: var(--neon-silver);
-  --accent-glow: rgba(226, 232, 240, 0.45);
+  --accent: var(--tesla-silver);
+  --accent-glow: rgba(203, 213, 225, 0.4);
 }
 
 * {
@@ -76,6 +86,7 @@ html, body {
   padding: 0;
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+  letter-spacing: -0.01em;
 }
 
 /* Device Viewport Wrapper - Full Screen (100% Screen Usage) */
@@ -105,7 +116,7 @@ html, body {
   z-index: 1;
 }
 
-/* LANDSCAPE ORIENTATION LAYOUT (Repartir Contenido y Menús en Horizontal) */
+/* LANDSCAPE ORIENTATION LAYOUT */
 @media (orientation: landscape), (min-aspect-ratio: 1.2/1) {
   .cockpit-container {
     display: grid;
@@ -154,7 +165,7 @@ html, body {
   }
 }
 
-/* Carbon Fiber Mesh Background */
+/* Tesla Ambient Glass Mesh Background (Limpio y ligero sin ruido) */
 .carbon-bg {
   position: absolute;
   top: 0;
@@ -162,29 +173,24 @@ html, body {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 50% 25%, rgba(57, 255, 20, 0.04) 0%, transparent 65%),
-    linear-gradient(27deg, #0e131b 5px, transparent 5px) 0 5px,
-    linear-gradient(207deg, #0e131b 5px, transparent 5px) 10px 0px,
-    linear-gradient(27deg, #151c27 5px, transparent 5px) 0px 10px,
-    linear-gradient(207deg, #151c27 5px, transparent 5px) 10px 5px,
-    linear-gradient(90deg, #080a0e 10px, transparent 10px),
-    linear-gradient(#080a0e 25%, #050609 25%, #050609 50%, transparent 50%, transparent 75%, #0d1219 75%);
-  background-size: 20px 20px;
-  opacity: 0.85;
+    radial-gradient(circle at 50% 12%, rgba(0, 229, 255, 0.05) 0%, transparent 60%),
+    radial-gradient(circle at 85% 85%, rgba(232, 33, 39, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0d13 0%, #0e121a 50%, #080a0e 100%);
+  opacity: 1;
   z-index: -2;
 }
 
 .ambient-glow {
   position: absolute;
-  top: 15%;
+  top: 10%;
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
-  height: 300px;
+  width: 320px;
+  height: 320px;
   background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-  filter: blur(55px);
+  filter: blur(65px);
   pointer-events: none;
-  opacity: 0.35;
+  opacity: 0.28;
   transition: all 0.4s ease;
   z-index: -1;
 }
@@ -391,58 +397,62 @@ html, body {
 .metric-card {
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
-  border-radius: 12px;
-  padding: 8px 10px;
-  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 10px 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 72px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  min-height: 76px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .metric-card:hover {
   border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .card-icon-tag {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .card-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--text-muted);
 }
 
 .dot-lime {
-  background: var(--neon-lime);
-  box-shadow: 0 0 5px var(--neon-lime);
+  background: var(--tesla-cyan);
+  box-shadow: 0 0 6px var(--tesla-cyan);
 }
 
 .card-title {
-  font-family: var(--font-data);
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.6px;
+  font-family: var(--font-tech);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
   color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .metric-value-box {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin: 3px 0 4px 0;
+  margin: 4px 0 2px 0;
 }
 
 .metric-num {
   font-family: var(--font-display);
-  font-size: 1.18rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.5px;
@@ -451,8 +461,8 @@ html, body {
 
 .font-mono {
   font-family: var(--font-mono) !important;
-  font-size: 1.12rem;
-  letter-spacing: 0;
+  font-size: 1.15rem;
+  letter-spacing: -0.2px;
 }
 
 .font-mono small {
@@ -461,43 +471,43 @@ html, body {
 }
 
 .metric-unit {
-  font-family: var(--font-data);
+  font-family: var(--font-tech);
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.5px;
 }
 
 .text-lime {
-  color: var(--neon-lime) !important;
-  text-shadow: 0 0 10px var(--neon-lime-glow);
+  color: var(--tesla-cyan) !important;
+  text-shadow: 0 0 10px var(--tesla-cyan-glow);
 }
 
 .metric-progress-bar {
   width: 100%;
   height: 3px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
   background: #ffffff;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 .bar-fill-time {
-  background: var(--neon-yellow);
+  background: var(--tesla-amber);
 }
 
 .bar-fill-lime {
-  background: var(--neon-lime);
-  box-shadow: 0 0 6px var(--neon-lime);
+  background: var(--tesla-cyan);
+  box-shadow: 0 0 6px var(--tesla-cyan-glow);
 }
 
 /* ==========================================================================
-   2. VELOCÍMETRO DIGITAL CENTRAL DE GRAN TAMAÑO
+   2. VELOCÍMETRO DIGITAL CENTRAL DE GRAN TAMAÑO (ESTILO CLUSTER TESLA)
    ========================================================================== */
 .speedometer-centerpiece {
   position: relative;
@@ -507,9 +517,12 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 65%, rgba(18, 25, 38, 0.6) 0%, transparent 75%);
+  background: radial-gradient(circle at 50% 65%, rgba(18, 26, 40, 0.5) 0%, rgba(10, 14, 20, 0.7) 100%);
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
 
 .gauge-arc-track {
@@ -529,30 +542,31 @@ html, body {
 }
 
 .radial-bg {
-  stroke: rgba(255, 255, 255, 0.07);
-  stroke-width: 10;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 8;
   stroke-linecap: round;
 }
 
 .radial-active {
   stroke: url(#speedGrad);
-  stroke-width: 11;
+  stroke-width: 9;
   stroke-linecap: round;
   stroke-dasharray: 480;
-  stroke-dashoffset: 200; /* Calculated via JS */
-  filter: drop-shadow(0 0 10px rgba(57, 255, 20, 0.6));
+  stroke-dashoffset: 200;
+  filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.5));
   transition: stroke-dashoffset 0.12s ease-out;
 }
 
 .speed-ticks {
   position: absolute;
-  bottom: 8px;
-  left: 20px;
-  right: 20px;
+  bottom: 10px;
+  left: 24px;
+  right: 24px;
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
   font-size: 0.68rem;
+  font-weight: 500;
   color: var(--text-dim);
 }
 
@@ -563,30 +577,31 @@ html, body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .speed-header-label {
-  font-family: var(--font-data);
-  font-size: 0.75rem;
-  letter-spacing: 2px;
+  font-family: var(--font-tech);
+  font-size: 0.7rem;
+  letter-spacing: 2.5px;
   font-weight: 700;
   color: var(--text-muted);
+  text-transform: uppercase;
 }
 
-/* Tipografía técnica / monoespaciada de gran tamaño */
+/* Tipografía de alta precisión Tesla */
 .speed-digits-mono {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
   font-size: 5.6rem;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 0.9;
   letter-spacing: -3px;
   color: #ffffff;
   text-shadow: 
-    0 0 35px rgba(255, 255, 255, 0.25),
-    0 0 14px var(--accent-glow);
-  margin: 2px 0 2px 0;
+    0 0 30px rgba(255, 255, 255, 0.25),
+    0 0 12px var(--accent-glow);
+  margin: 2px 0;
 }
 
 .speed-unit-sub {
@@ -596,9 +611,9 @@ html, body {
 }
 
 .unit-main {
-  font-family: var(--font-data);
-  font-size: 1rem;
-  font-weight: 800;
+  font-family: var(--font-tech);
+  font-size: 0.9rem;
+  font-weight: 700;
   letter-spacing: 3px;
   color: var(--text-muted);
 }
@@ -606,8 +621,8 @@ html, body {
 .speed-max-tag {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1px 7px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
   font-size: 0.68rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
@@ -619,17 +634,19 @@ html, body {
 }
 
 /* ==========================================================================
-   3. GRÁFICO DE LÍNEAS MINIMALISTA DE ALTIMETRÍA EN TIEMPO REAL
+   3. GRÁFICO MINIMALISTA DE ALTIMETRÍA EN TIEMPO REAL
    ========================================================================== */
 .altimetry-section {
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
-  border-radius: 16px;
-  padding: 10px 14px 10px 14px;
-  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 12px 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   position: relative;
   overflow: hidden;
   margin: 6px 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .altimetry-section::before {
@@ -639,8 +656,8 @@ html, body {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--neon-lime), transparent);
-  opacity: 0.6;
+  background: linear-gradient(90deg, transparent, var(--tesla-cyan), transparent);
+  opacity: 0.5;
 }
 
 .altimetry-header {
@@ -661,11 +678,12 @@ html, body {
 }
 
 .alt-title {
-  font-family: var(--font-data);
+  font-family: var(--font-tech);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 1px;
   color: var(--text-muted);
+  text-transform: uppercase;
 }
 
 .alt-current-badge {
@@ -675,7 +693,7 @@ html, body {
 }
 
 .alt-curr-lbl {
-  font-family: var(--font-data);
+  font-family: var(--font-tech);
   font-size: 0.65rem;
   color: var(--text-muted);
 }
@@ -684,8 +702,8 @@ html, body {
   font-family: var(--font-mono);
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--neon-lime);
-  text-shadow: 0 0 8px var(--neon-lime-glow);
+  color: var(--tesla-cyan);
+  text-shadow: 0 0 8px var(--tesla-cyan-glow);
 }
 
 .altimetry-canvas-container {
@@ -717,11 +735,11 @@ html, body {
   color: var(--text-dim);
   background: rgba(6, 8, 11, 0.6);
   padding: 1px 4px;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 /* ==========================================================================
-   5. BOTÓN PRINCIPAL GRANDE PARA "ANULACIÓN MANUAL" (START / STOP)
+   5. BOTÓN TESLA DRIVE ACTION (START / STOP TELEMETRY)
    ========================================================================== */
 .manual-override-section {
   display: flex;
@@ -733,64 +751,37 @@ html, body {
 
 .manual-override-btn {
   width: 100%;
-  height: 78px;
-  background: linear-gradient(180deg, #200408 0%, #120204 60%, #080102 100%);
-  border: 2px solid var(--neon-red);
-  border-radius: 18px;
+  height: 74px;
+  background: linear-gradient(135deg, rgba(232, 33, 39, 0.92) 0%, rgba(168, 16, 22, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 0 25px var(--neon-red-glow),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4),
-    inset 0 -2px 10px rgba(0, 0, 0, 0.8);
+    0 8px 24px var(--tesla-red-glow),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .manual-override-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 38px var(--neon-red-glow);
+  box-shadow: 0 12px 32px var(--tesla-red-glow);
 }
 
 .manual-override-btn:active {
   transform: translateY(1px) scale(0.99);
 }
 
-/* Franja reflectante de competición / hazard */
 .btn-hazard-stripe {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 12px;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--neon-red),
-    var(--neon-red) 6px,
-    #080102 6px,
-    #080102 12px
-  );
-  opacity: 0.8;
+  display: none;
 }
 
 .manual-override-btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: 12px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--neon-red),
-    var(--neon-red) 6px,
-    #080102 6px,
-    #080102 12px
-  );
-  opacity: 0.8;
+  display: none;
 }
 
 .btn-outer-scanner {
@@ -799,9 +790,9 @@ html, body {
   left: -100%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  transform: skewX(-25deg);
-  animation: buttonScan 3.5s infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: skewX(-20deg);
+  animation: buttonScan 4s infinite;
 }
 
 @keyframes buttonScan {
@@ -809,6 +800,7 @@ html, body {
   35% { left: 160%; }
   100% { left: 160%; }
 }
+
 
 .btn-inner-core {
   display: flex;
