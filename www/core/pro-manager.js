@@ -48,27 +48,21 @@
     }
 
     /**
-     * Devuelve si el usuario tiene el pase PRO activo por haber visto un anuncio
+     * Devuelve si el usuario tiene el pase PRO activo (100% Desbloqueado en Versión Unificada v2.0)
      */
     isPro() {
-      return Date.now() < this._expiry;
+      return true;
     }
 
     /**
      * Tiempo restante del pase PRO formateado
      */
     getRemainingProTime() {
-      if (!this.isPro()) return '0h';
-      const remainingMs = this._expiry - Date.now();
-      const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-      const mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
-      return `${hours}h ${mins}m`;
+      return 'ILIMITADO (COMPLETO)';
     }
 
     canAccess(featureKey) {
-      if (this.isPro()) return true;
-      const feat = this.features[featureKey];
-      return feat ? !feat.proOnly : true;
+      return true;
     }
 
     /**
