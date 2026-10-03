@@ -14,7 +14,7 @@ public struct RouteRecordingView: View {
     public init() {}
 
     public var body: some View {
-        NavigationStack {
+        NavigationView {
             ZStack {
                 Color(red: 0.04, green: 0.05, blue: 0.08)
                     .ignoresSafeArea()
@@ -46,19 +46,27 @@ public struct RouteRecordingView: View {
                 }
                 .padding(.vertical, 16)
                 
+                // Enlace de navegación programático a pantalla de resumen (compatible con iOS 14+)
+                NavigationLink(
+                    destination: Group {
+                        if let id = summaryRouteId {
+                            RouteSummaryView(routeId: id)
+                        }
+                    },
+                    isActive: $isNavigatingToSummary
+                ) {
+                    EmptyView()
+                }
+                .hidden()
+                
                 if isSaving {
                     savingOverlay
                 }
             }
             .navigationTitle("Cockpit")
             .navigationBarTitleDisplayMode(.inline)
-            // Navegación obligatoria pasando ÚNICAMENTE el UUID
-            .navigationDestination(isPresented: $isNavigatingToSummary) {
-                if let id = summaryRouteId {
-                    RouteSummaryView(routeId: id)
-                }
-            }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
     
     // MARK: - UI Components
@@ -100,7 +108,7 @@ public struct RouteRecordingView: View {
                         .foregroundColor(.gray)
                     Text(String(format: "%.2f km", locationManager.totalDistanceMeters / 1000.0))
                         .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .foregroundColor(.cyan)
+                        .foregroundColor(Color(red: 0.0, green: 0.9, blue: 1.0))
                 }
                 Spacer()
             }
@@ -138,7 +146,7 @@ public struct RouteRecordingView: View {
             Color.black.opacity(0.7).ignoresSafeArea()
             VStack(spacing: 14) {
                 ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
+                    .progressViewStyle(CircularProgressViewStyle(tint: Color(red: 0.0, green: 0.9, blue: 1.0)))
                     .scaleEffect(1.4)
                 Text("Persistiendo ruta en disco...")
                     .font(.system(size: 14, weight: .semibold, design: .monospaced))

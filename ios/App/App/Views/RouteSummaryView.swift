@@ -97,8 +97,10 @@ public struct RouteSummaryView: View {
                 }
             }
         }
-        .task {
-            await loadRoute()
+        .onAppear {
+            Task {
+                await loadRoute()
+            }
         }
         .sheet(isPresented: $showShareSheet) {
             if let url = exportFileURL {
@@ -203,7 +205,7 @@ public struct RouteSummaryView: View {
                     value: String(format: "%.2f", route.totalDistanceMeters / 1000.0),
                     unit: "KM",
                     icon: "point.topleft.down.to.point.bottomright.curvepath",
-                    tint: .cyan
+                    tint: Color(red: 0.0, green: 0.9, blue: 1.0)
                 )
                 metricCard(
                     title: "TIEMPO",
@@ -244,7 +246,7 @@ public struct RouteSummaryView: View {
                     value: "-\(Int(route.elevationLossMeters))",
                     unit: "M",
                     icon: "arrow.down.right",
-                    tint: .indigo
+                    tint: Color(red: 0.35, green: 0.35, blue: 0.85)
                 )
             }
         }
