@@ -51,6 +51,8 @@
 	<string>Race Wars Tracker requiere acceso a tu ubicación GPS en tiempo real para calcular la velocidad, odometría de precisión y registrar tus rutas de telemetría.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Race Wars Tracker utiliza la ubicación en segundo plano para continuar registrando tu ruta de competición incluso con la pantalla apagada o al cambiar de aplicación.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Race Wars Tracker necesita acceso continuo a tu ubicación para registrar tracks de telemetría sin cortes cuando el dispositivo entra en reposo o se bloquea la pantalla.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Race Wars Tracker utiliza Bluetooth LE para comunicarse con el vehículo o adaptadores OBD2 y detectar el encendido para auto-iniciar la grabación de la carrera.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
@@ -58,6 +60,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
+		<string>fetch</string>
 		<string>bluetooth-central</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>

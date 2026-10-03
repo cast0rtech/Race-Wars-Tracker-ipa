@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Race Wars Tracker</string>
-    <string name="title_activity_main">Race Wars Tracker</string>
-    <string name="package_name">com.racewars.tracker</string>
-    <string name="custom_url_scheme">com.racewars.tracker</string>
-</resources>

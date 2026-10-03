@@ -324,7 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       // Detener grabación real y guardar sesión
       try {
-        await telemetry.stopRecording();
+        const savedSession = await telemetry.stopRecording();
+        if (savedSession && savedSession.id) {
+          // Navegar al resumen pasando SOLO el ID para forzar la lectura desde la base de datos
+          window.location.href = `summary.html?session=${encodeURIComponent(savedSession.id)}`;
+          return;
+        }
       } catch (error) {
         console.error('[Telemetry] No se pudo guardar la sesión:', error);
       }

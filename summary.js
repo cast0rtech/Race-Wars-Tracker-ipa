@@ -4,21 +4,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   const progressBar = document.getElementById('exportProgressBar');
   const toast = document.getElementById('toastFeedback');
   const weatherTimeline = document.getElementById('weatherTimeline');
+  const routeTrack = document.getElementById('routeTrack');
+  
   const sessions = window.RaceWarsSessionStore ? await window.RaceWarsSessionStore.list() : [];
   const requestedId = new URLSearchParams(location.search).get('session');
-  let currentSession = sessions.find(item => item.id === requestedId) || sessions[0] || null;
+  
+  let currentSession = null;
+  let isNotFoundError = false;
+
+  // 1. Consulta estricta por ID persistido (Fuente única de verdad)
+  if (requestedId) {
+    if (window.RaceWarsSessionStore) {
+      currentSession = await window.RaceWarsSessionStore.get(requestedId);
+    }
+    if (!currentSession) {
+      isNotFoundError = true;
+    }
+  } else {
+    currentSession = sessions[0] || null;
+  }
 
   function showMessage(message, isError = false) {
+    if (!toast) return;
     toast.textContent = message;
     toast.style.borderColor = isError ? '#ff465c' : '#39ff14';
     toast.style.color = isError ? '#ff465c' : '#39ff14';
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 4000);
+    setTimeout(() => toast.classList.remove('show'), 5000);
   }
 
   function setMetric(selector, value) {
     const element = document.querySelector(selector);
     if (element) element.textContent = value;
+  }
+
+  function renderNotFoundState(id) {
+    setMetric('.summary-main-title', 'Ruta no encontrada');
+    setMetric('#routeDate', `ID: ${id}`);
+    setMetric('#routeDistance', 'DISTANCIA: — KM');
+    setMetric('#routePointCount', 'TRAZADO GPS: ERROR (NO ENCONTRADA)');
+    
+    setMetric('.highlights-grid .hl-card:nth-child(1) .hl-num', '—');
+    setMetric('.highlights-grid .hl-card:nth-child(2) .hl-num', '—');
+    setMetric('.highlights-grid .hl-card:nth-child(3) .hl-num', '—');
+    setMetric('.highlights-grid .hl-card:nth-child(4) .hl-num', '—');
+    setMetric('.highlights-grid .hl-card:nth-child(5) .hl-num', '—');
+
+    const typeBadge = document.getElementById('routeTypeBadge');
+    if (typeBadge) {
+      typeBadge.style.display = 'block';
+      typeBadge.style.borderColor = '#ff465c';
+      typeBadge.style.color = '#ff465c';
+      typeBadge.style.background = 'rgba(255, 70, 92, 0.15)';
+      typeBadge.textContent = `❌ ERROR: No se encontró la ruta en disco (ID: ${id})`;
+    }
+
+    if (routeTrack) routeTrack.setAttribute('points', '');
+    if (weatherTimeline) {
+      weatherTimeline.innerHTML = `<p style="color: #ff465c;">No se encontró la ruta con ID <code>${id}</code> en el almacenamiento local.</p>`;
+    }
+    if (exportBtn) exportBtn.disabled = true;
+
+    showMessage(`No se encontró la ruta con ID: ${id}`, true);
+  }
+
+  function renderEmptyState() {
+    setMetric('#routeDate', 'No hay sesiones guardadas');
+    setMetric('#routeDistance', 'DISTANCIA: 0.00 KM');
+    setMetric('#routePointCount', 'TRAZADO GPS: 0 PUNTOS');
+    if (exportBtn) exportBtn.disabled = true;
+    if (weatherTimeline) weatherTimeline.textContent = 'Graba una ruta GPS para ver aquí sus datos reales.';
   }
 
   function renderSession(session) {
@@ -28,7 +83,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const date = new Date(start);
     setMetric('#routeDate', `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
     setMetric('#routeDistance', `DISTANCIA: ${Number(session.distanceKm || 0).toFixed(2)} KM`);
-    setMetric('#routePointCount', `TRAZADO GPS: ${points.length} PUNTOS`);
+    
+    // Distinción específica entre 0 puntos vs ruta con puntos
+    if (points.length === 0) {
+      setMetric('#routePointCount', 'TRAZADO GPS: 0 PUNTOS (LA RUTA NO TIENE PUNTOS)');
+    } else {
+      setMetric('#routePointCount', `TRAZADO GPS: ${points.length} PUNTOS`);
+    }
+
     setMetric('.highlights-grid .hl-card:nth-child(1) .hl-num', Math.round(session.avgSpeedKmh || 0));
     setMetric('.highlights-grid .hl-card:nth-child(2) .hl-num', Math.round(session.maxSpeedKmh || 0));
     setMetric('.highlights-grid .hl-card:nth-child(3) .hl-num', session.peakAltitudeM == null ? '—' : Math.round(session.peakAltitudeM));
@@ -39,8 +101,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       setMetric('.summary-main-title', session.title);
     }
     const isRoadtrip = session.isRoadtrip || (session.id && session.id.startsWith('roadtrip_'));
+    const typeBadge = document.getElementById('routeTypeBadge');
     if (typeBadge) {
-      if (isRoadtrip) {
+      if (points.length === 0) {
+        typeBadge.style.display = 'block';
+        typeBadge.style.borderColor = '#ff9900';
+        typeBadge.style.color = '#ff9900';
+        typeBadge.style.background = 'rgba(255, 153, 0, 0.15)';
+        typeBadge.textContent = '⚠️ LA RUTA NO TIENE PUNTOS GPS REGISTRADOS';
+      } else if (isRoadtrip) {
         typeBadge.style.display = 'block';
         typeBadge.style.borderColor = '#00e5ff';
         typeBadge.style.color = '#00e5ff';
@@ -143,10 +212,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderWeatherTimeline(session);
 
     if (exportBtn) exportBtn.disabled = points.length === 0;
-    if (points.length === 0) showMessage('La sesión guardada no contiene puntos GPS exportables.', true);
+    if (points.length === 0) showMessage('La sesión guardada no contiene puntos GPS registrados.', true);
   }
 
-  // Keep all recorded sessions available from the summary screen.
+  // Desplegable de selección de sesión (si hay más de una)
   const dateBadge = document.querySelector('.route-date-badge');
   if (dateBadge && sessions.length > 1) {
     const selector = document.createElement('select');
@@ -168,14 +237,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     dateBadge.appendChild(selector);
   }
 
-  if (currentSession) renderSession(currentSession);
-  else {
-    setMetric('#routeDate', 'No hay sesiones guardadas');
-    if (exportBtn) exportBtn.disabled = true;
-    if (weatherTimeline) weatherTimeline.textContent = 'Graba una ruta GPS para ver aquí sus datos reales.';
-  }
-  if (currentSession?.status === 'INTERRUPTED') {
-    showMessage('Mostrando la última copia guardada de una ruta interrumpida.');
+  // 2. Ejecutar render según el resultado de la consulta
+  if (isNotFoundError) {
+    renderNotFoundState(requestedId);
+  } else if (currentSession) {
+    renderSession(currentSession);
+    if (currentSession?.status === 'INTERRUPTED') {
+      showMessage('Mostrando la última copia guardada de una ruta interrumpida.');
+    }
+  } else {
+    renderEmptyState();
   }
 
   if (exportBtn) exportBtn.addEventListener('click', () => {

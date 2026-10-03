@@ -5,16 +5,11 @@
   "main": "index.html",
   "scripts": {
     "build:web": "node scripts/prepare-web.js",
-    "cap:sync": "npm run build:web && npx cap sync android",
-    "cap:sync:ios": "npm run build:web && npx cap sync ios",
-    "cap:sync:all": "npm run build:web && npx cap sync",
-    "build:apk": "npm run cap:sync && cd android && gradlew.bat assembleDebug",
-    "build:bundle": "npm run cap:sync && cd android && gradlew.bat bundleDebug",
-    "build:bundle-release": "npm run cap:sync && cd android && gradlew.bat bundleRelease"
+    "cap:sync": "npm run build:web && npx cap sync ios",
+    "cap:sync:ios": "npm run build:web && npx cap sync ios"
   },
   "dependencies": {
     "@capacitor-community/bluetooth-le": "^7.3.2",
-    "@capacitor/android": "^7.0.0",
     "@capacitor/core": "^7.0.0",
     "@capacitor/geolocation": "^7.1.8",
     "@capacitor/ios": "^7.6.9",

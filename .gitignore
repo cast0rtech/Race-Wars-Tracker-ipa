@@ -23,6 +23,7 @@ Thumbs.db
 # iOS build outputs & DerivedData
 ios/App/Pods/
 ios/App/build/
+*.ipa
 *.xcscmblueprint
 xcuserdata/
 *.xcuserdatad/
