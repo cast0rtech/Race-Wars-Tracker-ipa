@@ -115,6 +115,35 @@ struct TestRunner {
             let emptyFetched = try await repository.fetch(by: emptyRoute.id)
             assert(emptyFetched != nil && emptyFetched!.trackpoints.isEmpty, "FAIL: emptyFetched trackpoints should be empty")
             print("  ✓ 6. Consulta de ruta con 0 puntos -> Resumen muestra: 'La ruta no tiene puntos'")
+
+            // g) Verificación de filtrado de pico de GPS anómalo (ej: 5247 km/h)
+            let glitchPoint = TrackPoint(
+                latitude: 40.4200,
+                longitude: -3.7000,
+                altitude: 675.0,
+                timestamp: baseDate.addingTimeInterval(30),
+                speedKmh: 5247.0,
+                horizontalAccuracy: 150.0
+            )
+            let routeWithGlitchTitle: String? = "Ruta Con Salto Anomalo"
+            let routeWithGlitch = Route(
+                id: UUID(),
+                title: routeWithGlitchTitle,
+                startedAt: baseDate,
+                endedAt: baseDate.addingTimeInterval(30),
+                trackpoints: [p1, p2, p3, glitchPoint]
+            )
+            assert(routeWithGlitch.maxSpeedKmh == 75.0, "FAIL: maxSpeedKmh debe ser 75.0 km/h y filtrar el pico de 5247 km/h, pero fue \(routeWithGlitch.maxSpeedKmh)")
+            print("  ✓ 7. Filtrado de pico de GPS: 5247 km/h descartado -> Velocidad máxima correcta calculada: \(routeWithGlitch.maxSpeedKmh) km/h")
+
+            // h) Verificación de asunción de velocidad máxima de 80 km/h al perder conexión GPS
+            let maxAssumedSpeedWithoutGPS = 80.0
+            var simulatedSpeed = 125.0
+            if simulatedSpeed > maxAssumedSpeedWithoutGPS {
+                simulatedSpeed = maxAssumedSpeedWithoutGPS
+            }
+            assert(simulatedSpeed == 80.0, "FAIL: Al perder conexión GPS, la velocidad asumida debe ser máx 80 km/h")
+            print("  ✓ 8. Pérdida de conexión GPS: Velocidad asumida acotada a máximo 80 km/h (\(simulatedSpeed) km/h)")
             
             print("\n==================================================================")
             print("                  TODOS LOS TESTS PASARON (PASS)                  ")

@@ -197,6 +197,15 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         recStatusChip.style.color = 'var(--neon-red)';
       }
+    } else {
+      // Estado durante la grabación activa
+      if (state === 'warning' || state === 'error') {
+        recStatusChip.textContent = 'REC • SIN GPS (≤80 km/h)';
+        recStatusChip.style.color = 'var(--neon-yellow)';
+      } else if (state === 'active') {
+        recStatusChip.textContent = 'LIVE REC';
+        recStatusChip.style.color = '#ffffff';
+      }
     }
   });
 

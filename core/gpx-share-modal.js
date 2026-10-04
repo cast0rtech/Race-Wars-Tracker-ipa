@@ -109,16 +109,25 @@
     }
 
     _makeGpx(session) {
-      const points = (session.trackpoints || []).filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)));
-      const trkpts = points.map(p => {
-        const ele = p.altitudeM != null && Number.isFinite(Number(p.altitudeM)) ? `<ele>${Number(p.altitudeM).toFixed(1)}</ele>` : '';
-        const time = Number.isFinite(Number(p.timestamp)) ? `<time>${new Date(Number(p.timestamp)).toISOString()}</time>` : '';
-        return `<trkpt lat="${Number(p.lat).toFixed(7)}" lon="${Number(p.lng).toFixed(7)}">${ele}${time}</trkpt>`;
-      }).join('');
+      const points = (session.trackpoints || []).filter(p => {
+        const lat = p.lat !== undefined ? Number(p.lat) : Number(p.latitude);
+        const lon = p.lng !== undefined ? Number(p.lng) : (p.lon !== undefined ? Number(p.lon) : Number(p.longitude));
+        return Number.isFinite(lat) && Number.isFinite(lon);
+      });
 
-      const startDate = new Date(session.startedAt || session.date || Date.now()).toISOString();
-      const title = session.title || 'Ruta Race Wars Tracker';
-      return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Race Wars Tracker" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>${title}</name><time>${startDate}</time></metadata><trk><name>${title}</name><trkseg>${trkpts}</trkseg></trk></gpx>`;
+      const trkptLines = points.map(p => {
+        const lat = p.lat !== undefined ? p.lat : p.latitude;
+        const lon = p.lng !== undefined ? p.lng : (p.lon !== undefined ? p.lon : p.longitude);
+        const rawAlt = p.altitudeM !== undefined && p.altitudeM !== null ? p.altitudeM : (p.altitude !== undefined ? p.altitude : null);
+        const hasAlt = rawAlt !== null && Number.isFinite(Number(rawAlt));
+        const eleLine = hasAlt ? `\t\t\t\t<ele>${rawAlt}</ele>\n` : '';
+        const d = new Date(p.timestamp || Date.now());
+        const timeStr = (!isNaN(d.getTime())) ? d.toISOString().replace(/\.\d{3}Z$/, 'Z') : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+
+        return `\t\t\t<trkpt lat="${lat}" lon="${lon}">\n${eleLine}\t\t\t\t<time>${timeStr}</time>\n\t\t\t</trkpt>`;
+      }).join('\n');
+
+      return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="Open GPX Tracker for iOS">\n\t<trk>\n\t\t<trkseg>\n${trkptLines}\n\t\t</trkseg>\n\t</trk>\n</gpx>\n`;
     }
 
     _makeZipBlob(gpxContent, session) {
@@ -175,7 +184,16 @@
       const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
       const dist = Number(session.distanceKm || 0).toFixed(2);
       const avgSpd = Math.round(session.avgSpeedKmh || 0);
-      const maxSpd = Math.round(session.maxSpeedKmh || 0);
+
+      // Sanitizar velocidad máxima para evitar glitches de satélite (> 350 km/h)
+      let maxSpd = Math.round(session.maxSpeedKmh || 0);
+      if (maxSpd > 350 || maxSpd <= 0) {
+        const valid = (session.trackpoints || [])
+          .map(p => Number(p.speedKmh || 0))
+          .filter(s => Number.isFinite(s) && s > 0 && s <= 350);
+        maxSpd = valid.length ? Math.round(Math.max(...valid)) : (avgSpd > 0 ? Math.round(avgSpd * 1.35) : 120);
+      }
+
       const elevGain = session.elevationGainM != null ? `+${Math.round(session.elevationGainM)}m` : '—';
       const points = (session.trackpoints || []).length;
       const title = session.title || 'Sesión de Telemetría';
@@ -369,6 +387,13 @@
     }
 
     open(session) {
+      if (window.RaceWarsSessionStore && typeof window.RaceWarsSessionStore.sanitizeSession === 'function') {
+        const { session: clean, modified } = window.RaceWarsSessionStore.sanitizeSession(session);
+        session = clean;
+        if (modified) {
+          window.RaceWarsSessionStore.save(session).catch(() => {});
+        }
+      }
       this.currentSession = session;
       if (!this.backdrop) this._buildModal();
 

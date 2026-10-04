@@ -36,6 +36,9 @@ public struct RouteStats: Codable, Equatable {
 // MARK: - Route Stats Calculator (Shared Single Source of Truth)
 public struct RouteStatsCalculator {
     
+    // MARK: - Límite de realismo físico para telemetría
+    public static let maxRealisticSpeedKmh: Double = 350.0
+
     /// Calcula determinísticamente todas las métricas de una ruta a partir de sus trackpoints y fechas
     public static func calculate(
         points: [TrackPoint],
@@ -96,7 +99,8 @@ public struct RouteStatsCalculator {
         
         // 3. Velocidades extremas y altitudes extremas
         for pt in sortedPoints {
-            if pt.speedKmh > maxSpeed {
+            // Filtrar picos anómalos o glitches de sensor GPS (> 350 km/h)
+            if pt.speedKmh <= RouteStatsCalculator.maxRealisticSpeedKmh && pt.speedKmh > maxSpeed {
                 maxSpeed = pt.speedKmh
             }
             if let alt = pt.altitude {

@@ -126,8 +126,16 @@
       let totalDist = 0;
       let topSpeed = 0;
       filtered.forEach(s => {
+        if (window.RaceWarsSessionStore && typeof window.RaceWarsSessionStore.sanitizeSession === 'function') {
+          const { session: clean, modified } = window.RaceWarsSessionStore.sanitizeSession(s);
+          s = clean;
+          if (modified) {
+            window.RaceWarsSessionStore.save(s).catch(() => {});
+          }
+        }
         totalDist += Number(s.distanceKm || 0);
-        if (s.maxSpeedKmh > topSpeed) topSpeed = s.maxSpeedKmh;
+        const sMax = Number(s.maxSpeedKmh || 0);
+        if (sMax > topSpeed && sMax <= 350) topSpeed = sMax;
       });
 
       if (statTotalRoutes) statTotalRoutes.textContent = filtered.length;
@@ -179,7 +187,7 @@
             </div>
             <div class="metric-cell">
               <span class="metric-cell-lbl">MAX VEL</span>
-              <span class="metric-cell-val">${Math.round(session.maxSpeedKmh || 0)} KM/H</span>
+              <span class="metric-cell-val">${Math.min(350, Math.round(session.maxSpeedKmh || 0))} KM/H</span>
             </div>
             <div class="metric-cell">
               <span class="metric-cell-lbl">MEDIA</span>
@@ -273,7 +281,8 @@
         const pts = (s.trackpoints || []).filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)));
         mergedPoints = mergedPoints.concat(pts);
         totalDist += Number(s.distanceKm || 0);
-        if (s.maxSpeedKmh > maxSpeed) maxSpeed = s.maxSpeedKmh;
+        const sMax = Math.min(350, Number(s.maxSpeedKmh || 0));
+        if (sMax > maxSpeed) maxSpeed = sMax;
         totalElevGain += Number(s.elevationGainM || 0);
         totalElevLoss += Number(s.elevationLossM || 0);
         if (s.peakAltitudeM > maxAlt) maxAlt = s.peakAltitudeM;

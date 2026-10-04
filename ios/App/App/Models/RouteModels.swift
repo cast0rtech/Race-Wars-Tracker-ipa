@@ -89,7 +89,7 @@ public struct Route: Codable, Identifiable, Equatable {
         self.totalDistanceMeters = totalDistanceMeters
         self.durationSeconds = durationSeconds
         self.avgSpeedKmh = avgSpeedKmh
-        self.maxSpeedKmh = maxSpeedKmh
+        self.maxSpeedKmh = maxSpeedKmh <= RouteStatsCalculator.maxRealisticSpeedKmh ? maxSpeedKmh : 0.0
         self.elevationGainMeters = elevationGainMeters
         self.elevationLossMeters = elevationLossMeters
         self.peakAltitudeMeters = peakAltitudeMeters

@@ -170,6 +170,40 @@ public final class GPXExporter {
         return xml
     }
 
+    /// Genera XML GPX idéntico al estándar emitido por Open GPX Tracker for iOS
+    public func generateOpenGPXTrackerFormat(
+        points: [TrackPoint],
+        creator: String = "Open GPX Tracker for iOS"
+    ) throws -> String {
+        guard !points.isEmpty else {
+            throw GPXExportError.insufficientTrackPoints(count: 0)
+        }
+
+        var xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <gpx xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.topografix.com/GPX/1/1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="\(Self.escapeXML(creator))">
+        \t<trk>
+        \t\t<trkseg>\n
+        """
+
+        for point in points {
+            let latStr = String(format: "%.14g", locale: Locale(identifier: "en_US_POSIX"), point.latitude)
+            let lonStr = String(format: "%.14g", locale: Locale(identifier: "en_US_POSIX"), point.longitude)
+            let timeStr = iso8601Formatter.string(from: point.timestamp)
+
+            xml += "\t\t\t<trkpt lat=\"\(latStr)\" lon=\"\(lonStr)\">\n"
+            if let alt = point.altitude {
+                let altStr = String(format: "%.14g", locale: Locale(identifier: "en_US_POSIX"), alt)
+                xml += "\t\t\t\t<ele>\(altStr)</ele>\n"
+            }
+            xml += "\t\t\t\t<time>\(timeStr)</time>\n"
+            xml += "\t\t\t</trkpt>\n"
+        }
+
+        xml += "\t\t</trkseg>\n\t</trk>\n</gpx>\n"
+        return xml
+    }
+
     // MARK: - Validación con XMLParser
     
     /// Comprueba que el archivo sea XML sintácticamente válido y contenga los trackpoints esperados

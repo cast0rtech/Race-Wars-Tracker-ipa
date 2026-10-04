@@ -35,6 +35,12 @@ public final class LocationManager: NSObject, ObservableObject {
     @Published public private(set) var currentSpeedKmh: Double = 0.0
     @Published public private(set) var totalDistanceMeters: Double = 0.0
     @Published public private(set) var recordedPoints: [NativeTelemetryPoint] = []
+
+    // Regla de conexión GPS: velocidad máxima asumida sin señal (máx 80 km/h)
+    public static let maxAssumedSpeedWithoutGPS: Double = 80.0
+    @Published public private(set) var isGPSConnected: Bool = false
+    private var lastFixDate: Date? = nil
+    private var gpsWatchdogTimer: Timer?
     
     // Callbacks for non-SwiftUI consumers (e.g., Capacitor WebView Bridge)
     public var onPointRecorded: ((NativeTelemetryPoint) -> Void)?
@@ -185,6 +191,7 @@ public final class LocationManager: NSObject, ObservableObject {
             
             // 3. Iniciar escucha de CLLocationManager
             self.locationManager.startUpdatingLocation()
+            self.startWatchdog()
             print("[LocationManager] Grabación de ruta iniciada (Background Location Activo). ID: \(self.currentRecordingRouteId?.uuidString ?? "")")
         }
     }
@@ -194,6 +201,7 @@ public final class LocationManager: NSObject, ObservableObject {
         guard isRecording else { return }
         
         isRecording = false
+        stopWatchdog()
         locationManager.stopUpdatingLocation()
         
         // Finalizar sesión de actividad en background (iOS 17+)
@@ -206,6 +214,37 @@ public final class LocationManager: NSObject, ObservableObject {
         // Cerrar y persistir archivo definitivo
         finalizeSession()
         print("[LocationManager] Grabación detenida. Total puntos: \(recordedPoints.count), Distancia: \(totalDistanceMeters / 1000.0) km.")
+    }
+
+    // MARK: - GPS Connection Loss Handling
+    
+    private func startWatchdog() {
+        stopWatchdog()
+        gpsWatchdogTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self, self.isRecording else { return }
+            if let last = self.lastFixDate, Date().timeIntervalSince(last) > 2.5 {
+                if self.isGPSConnected {
+                    self.handleGPSConnectionLost()
+                }
+            }
+        }
+    }
+    
+    private func stopWatchdog() {
+        gpsWatchdogTimer?.invalidate()
+        gpsWatchdogTimer = nil
+    }
+    
+    /// Regla: Cuando el GPS deja de tener conexión la velocidad que debe asumir la app es máximo 80 km/h
+    public func handleGPSConnectionLost() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.isGPSConnected = false
+            if self.currentSpeedKmh > Self.maxAssumedSpeedWithoutGPS {
+                print("[LocationManager] Pérdida de señal GPS: limitando velocidad de \(self.currentSpeedKmh) a \(Self.maxAssumedSpeedWithoutGPS) km/h")
+                self.currentSpeedKmh = Self.maxAssumedSpeedWithoutGPS
+            }
+        }
     }
     
     /// Flujo de guardado: Construye el Route completo en memoria, lo persiste en RouteRepository y devuelve el UUID para navegación
@@ -398,16 +437,21 @@ extension LocationManager: CLLocationManagerDelegate {
     
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         for location in locations {
-            // Filtrar lecturas antiguas o con precisión horizontal negativa (inválidas)
-            guard location.horizontalAccuracy >= 0 else { continue }
+            // Filtrar lecturas antiguas o con precisión horizontal negativa/excesiva (> 50m)
+            guard location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= 50.0 else { continue }
             let ageSeconds = abs(location.timestamp.timeIntervalSinceNow)
             guard ageSeconds < 10.0 else { continue }
             
             let point = NativeTelemetryPoint(location: location)
+            guard point.speedKmh <= RouteStatsCalculator.maxRealisticSpeedKmh else { continue }
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 
+                // Conexión GPS activa y confirmada
+                self.isGPSConnected = true
+                self.lastFixDate = Date()
+
                 // Actualizar velocidad actual en km/h
                 self.currentSpeedKmh = point.speedKmh
                 
@@ -436,6 +480,7 @@ extension LocationManager: CLLocationManagerDelegate {
             stopRecording()
         } else {
             print("[LocationManager] Error de CoreLocation: \(error.localizedDescription)")
+            self.handleGPSConnectionLost()
         }
     }
 }

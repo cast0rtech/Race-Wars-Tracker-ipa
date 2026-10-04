@@ -77,6 +77,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderSession(session) {
+    if (window.RaceWarsSessionStore && typeof window.RaceWarsSessionStore.sanitizeSession === 'function') {
+      const { session: clean, modified } = window.RaceWarsSessionStore.sanitizeSession(session);
+      session = clean;
+      if (modified) {
+        window.RaceWarsSessionStore.save(session).catch(() => {});
+      }
+    } else if (session && (session.maxSpeedKmh > 350 || session.maxSpeedKmh <= 0)) {
+      const valid = (session.trackpoints || [])
+        .map(p => Number(p.speedKmh || 0))
+        .filter(s => Number.isFinite(s) && s > 0 && s <= 350);
+      if (valid.length > 0) {
+        session.maxSpeedKmh = Math.round(Math.max(...valid));
+      } else if (session.maxSpeedKmh > 350) {
+        session.maxSpeedKmh = session.avgSpeedKmh ? Math.round(session.avgSpeedKmh * 1.35) : 120;
+      }
+    }
+
     currentSession = session;
     const points = (session.trackpoints || []).filter(point => Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)));
     const start = session.startedAt || Date.parse(session.date) || Date.now();
