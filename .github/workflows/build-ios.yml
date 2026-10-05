@@ -49,14 +49,14 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             DEVELOPMENT_TEAM=""
 
-      - name: Ad-hoc Code Sign and Package Payload into IPA
+      - name: Package Clean IPA for Resigning
         run: |
           cd ios/App
           mkdir -p build/Payload
           cp -r build/App.xcarchive/Products/Applications/App.app build/Payload/
-          # Ad-hoc sign embedded frameworks and main application bundle for sideloading
-          find build/Payload/App.app/Frameworks -type d -name "*.framework" -exec codesign --force --deep --sign - {} \; 2>/dev/null || true
-          codesign --force --deep --sign - build/Payload/App.app
+          # Remove stale or ad-hoc signatures to ensure sideloaders (Sideloadly/AltStore/Esign) re-sign all frameworks cleanly
+          rm -rf build/Payload/App.app/_CodeSignature
+          find build/Payload/App.app/Frameworks -type d -name "_CodeSignature" -exec rm -rf {} + 2>/dev/null || true
           cd build
           zip -r -q RaceWarsTracker.ipa Payload
 

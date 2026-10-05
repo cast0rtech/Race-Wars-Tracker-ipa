@@ -3,9 +3,6 @@
   "appName": "Race Wars Tracker",
   "webDir": "www",
   "bundledWebRuntime": false,
-  "server": {
-    "iosScheme": "https"
-  },
   "ios": {
     "backgroundColor": "#06080B",
     "preferredContentMode": "mobile",

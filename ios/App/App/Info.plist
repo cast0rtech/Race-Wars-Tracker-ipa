@@ -60,8 +60,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
-		<string>fetch</string>
-		<string>bluetooth-central</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>

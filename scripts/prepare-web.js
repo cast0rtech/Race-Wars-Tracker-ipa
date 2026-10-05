@@ -21,7 +21,8 @@ const filesToCopy = [
   'summary.js',
   'card-offscreen.html',
   'card-offscreen.css',
-  'card-offscreen.js'
+  'card-offscreen.js',
+  'capacitor.config.json'
 ];
 
 let copied = 0;
