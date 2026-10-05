@@ -86,14 +86,8 @@ public final class LocationManager: NSObject, ObservableObject {
         // Filtro de distancia en metros (5 metros según especificación)
         locationManager.distanceFilter = 5.0
         
-        // CRÍTICO: No permitir que iOS pause los updates automáticamente en reposo
+        // No permitir que iOS pause los updates automáticamente en reposo
         locationManager.pausesLocationUpdatesAutomatically = false
-        
-        // CRÍTICO: Permitir actualizaciones en background
-        locationManager.allowsBackgroundLocationUpdates = true
-        
-        // Muestra el banner azul / Dynamic Island indicador de ubicación en segundo plano
-        locationManager.showsBackgroundLocationIndicator = true
     }
 
     // MARK: - 2. Permissions Hierarchy
@@ -189,7 +183,11 @@ public final class LocationManager: NSObject, ObservableObject {
                 print("[LocationManager] CLBackgroundActivitySession activada (iOS 17+).")
             }
             
-            // 3. Iniciar escucha de CLLocationManager
+            // 3. Iniciar escucha de CLLocationManager con background updates seguro
+            if let modes = Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String], modes.contains("location") {
+                self.locationManager.allowsBackgroundLocationUpdates = true
+                self.locationManager.showsBackgroundLocationIndicator = true
+            }
             self.locationManager.startUpdatingLocation()
             self.startWatchdog()
             print("[LocationManager] Grabación de ruta iniciada (Background Location Activo). ID: \(self.currentRecordingRouteId?.uuidString ?? "")")
@@ -203,6 +201,10 @@ public final class LocationManager: NSObject, ObservableObject {
         isRecording = false
         stopWatchdog()
         locationManager.stopUpdatingLocation()
+        if locationManager.allowsBackgroundLocationUpdates {
+            locationManager.allowsBackgroundLocationUpdates = false
+            locationManager.showsBackgroundLocationIndicator = false
+        }
         
         // Finalizar sesión de actividad en background (iOS 17+)
         if #available(iOS 17.0, *) {

@@ -7,10 +7,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Inicializar LocationManager para registrar rutas y gestionar relanzamientos de CoreLocation
-        _ = LocationManager.shared
-        
         if launchOptions?[.location] != nil {
+            _ = LocationManager.shared
             print("[AppDelegate] App relanzada en segundo plano por evento de CoreLocation.")
         }
         return true

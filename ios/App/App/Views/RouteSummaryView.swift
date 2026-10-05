@@ -305,6 +305,22 @@ public struct RouteSummaryView: View {
             }
             .disabled(route.trackpoints.isEmpty)
             .opacity(route.trackpoints.isEmpty ? 0.4 : 1.0)
+
+            Button(action: { exportKML(route: route) }) {
+                HStack {
+                    Image(systemName: "globe.americas.fill")
+                    Text("Exportar Archivo KML (Google Earth)")
+                        .fontWeight(.semibold)
+                }
+                .font(.system(size: 15))
+                .foregroundColor(.black)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Color(red: 0.22, green: 1.0, blue: 0.08)) // Neon racing green
+                .cornerRadius(12)
+            }
+            .disabled(route.trackpoints.isEmpty)
+            .opacity(route.trackpoints.isEmpty ? 0.4 : 1.0)
             
             if let err = exportErrorMessage {
                 Text(err)
@@ -324,6 +340,18 @@ public struct RouteSummaryView: View {
             self.exportErrorMessage = nil
         } catch {
             self.exportErrorMessage = "Error al exportar GPX: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Export KML Action
+    private func exportKML(route: Route) {
+        do {
+            let fileURL = try KMLExporter.createKMLFile(from: route)
+            self.exportFileURL = fileURL
+            self.showShareSheet = true
+            self.exportErrorMessage = nil
+        } catch {
+            self.exportErrorMessage = "Error al exportar KML: \(error.localizedDescription)"
         }
     }
     

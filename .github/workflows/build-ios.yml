@@ -49,11 +49,14 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             DEVELOPMENT_TEAM=""
 
-      - name: Package Payload into IPA
+      - name: Ad-hoc Code Sign and Package Payload into IPA
         run: |
           cd ios/App
           mkdir -p build/Payload
           cp -r build/App.xcarchive/Products/Applications/App.app build/Payload/
+          # Ad-hoc sign embedded frameworks and main application bundle for sideloading
+          find build/Payload/App.app/Frameworks -type d -name "*.framework" -exec codesign --force --deep --sign - {} \; 2>/dev/null || true
+          codesign --force --deep --sign - build/Payload/App.app
           cd build
           zip -r -q RaceWarsTracker.ipa Payload
 
