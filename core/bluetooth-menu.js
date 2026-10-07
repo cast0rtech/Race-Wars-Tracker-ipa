@@ -1,10 +1,10 @@
 /**
  * Race Wars Tracker - Real Bluetooth Hardware Device Manager
  * 
- * 100% Hardware Real en Android:
- * - Consulta dispositivos reales vinculados en el sistema Android (getBondedDevices)
+ * Hardware Real en iOS y Android:
+ * - Consulta dispositivos conectados en el sistema iOS (getConnectedDevices) / Android (getBondedDevices)
  * - Escaneo activo de dispositivos Bluetooth físicos cercanos (requestLEScan)
- * - Enlace directo a Ajustes de Bluetooth de Android (openBluetoothSettings)
+ * - Enlace directo a Ajustes de Bluetooth nativos de iOS / Android (NativeSettings & openBluetoothSettings)
  * - Selección táctil de cualquier dispositivo real detectado
  * - Auto-arranque de telemetría al detectar el vehículo real seleccionado
  */
@@ -23,6 +23,14 @@
       this.scanListener = null;
       this.discoveredDevices = []; // Dispositivos encontrados en vivo
       this._init();
+    }
+
+    _isIos() {
+      if (window.Capacitor && typeof window.Capacitor.getPlatform === 'function') {
+        return window.Capacitor.getPlatform() === 'ios';
+      }
+      return /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
     _loadSettings() {
@@ -63,6 +71,9 @@
         this.backdrop = document.getElementById('rwBtModalBackdrop');
         return;
       }
+
+      const isIos = this._isIos();
+      const settingsBtnText = isIos ? '⚙️ ABRIR AJUSTES BLUETOOTH DE IPHONE' : '⚙️ ABRIR AJUSTES BLUETOOTH';
 
       const backdrop = document.createElement('div');
       backdrop.id = 'rwBtModalBackdrop';
@@ -111,8 +122,8 @@
               <span id="rwBtScanBtnText">🔍 ESCANEAR DISPOSITIVOS REALES</span>
             </button>
 
-            <button class="bt-settings-native-btn" id="rwBtOpenAndroidSettings" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #a0aec0; padding: 8px 12px; font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <span>⚙️ ABRIR AJUSTES BLUETOOTH DE ANDROID</span>
+            <button class="bt-settings-native-btn" id="rwBtOpenNativeSettings" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #a0aec0; padding: 8px 12px; font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span id="rwBtSettingsLabel">${settingsBtnText}</span>
             </button>
           </div>
 
@@ -180,30 +191,55 @@
       this._renderDeviceList();
       this._bindEvents();
 
-      // Al inicializar en Android, cargar dispositivos emparejados automáticamente
+      // Al inicializar, cargar dispositivos emparejados / conectados automáticamente
       setTimeout(() => this.loadBondedDevices(), 400);
     }
 
     /**
-     * Obtiene los dispositivos físicos reales ya vinculados en Android
+     * Obtiene los dispositivos físicos reales ya vinculados en iOS / Android
      */
     async loadBondedDevices() {
       const BlePlugin = window.Capacitor?.Plugins?.BluetoothLe;
       if (!BlePlugin) return;
 
+      const isIos = this._isIos();
+      const defaultTag = isIos ? 'CONECTADO EN IPHONE' : 'VINCULADO';
+
       try {
         await BlePlugin.initialize({ androidNeverForLocation: false });
-        const res = await BlePlugin.getBondedDevices();
-        if (res && Array.isArray(res.devices) && res.devices.length > 0) {
-          console.log('[Bluetooth] Dispositivos reales vinculados en Android:', res.devices);
-          res.devices.forEach(dev => {
-            const name = dev.name || `Dispositivo BT (${dev.deviceId.substring(0, 8)})`;
-            this._registerDevice(name, dev.deviceId, 'VINCULADO EN ANDROID');
-          });
-          this._renderDeviceList();
+
+        // En iOS: Usar getConnectedDevices para listar dispositivos ya emparejados y conectados (radio del coche, OBD2, etc.)
+        if (isIos && typeof BlePlugin.getConnectedDevices === 'function') {
+          try {
+            const res = await BlePlugin.getConnectedDevices({ services: [] });
+            if (res && Array.isArray(res.devices) && res.devices.length > 0) {
+              console.log('[Bluetooth] Dispositivos conectados en iOS:', res.devices);
+              res.devices.forEach(dev => {
+                const name = dev.name || `Dispositivo BT (${dev.deviceId.substring(0, 8)})`;
+                this._registerDevice(name, dev.deviceId, 'CONECTADO EN IPHONE');
+              });
+              this._renderDeviceList();
+              return;
+            }
+          } catch (e) {
+            console.warn('[Bluetooth] getConnectedDevices en iOS aviso:', e);
+          }
+        }
+
+        // En Android: getBondedDevices
+        if (typeof BlePlugin.getBondedDevices === 'function') {
+          const res = await BlePlugin.getBondedDevices();
+          if (res && Array.isArray(res.devices) && res.devices.length > 0) {
+            console.log('[Bluetooth] Dispositivos vinculados:', res.devices);
+            res.devices.forEach(dev => {
+              const name = dev.name || `Dispositivo BT (${dev.deviceId.substring(0, 8)})`;
+              this._registerDevice(name, dev.deviceId, defaultTag);
+            });
+            this._renderDeviceList();
+          }
         }
       } catch (err) {
-        console.warn('[Bluetooth] getBondedDevices aviso:', err);
+        console.warn('[Bluetooth] loadBondedDevices aviso:', err);
       }
     }
 
@@ -239,10 +275,12 @@
       }
 
       if (allDevices.length === 0) {
+        const isIos = this._isIos();
+        const helpPlace = isIos ? 'Ajustes ➔ Bluetooth de tu iPhone' : 'Ajustes de Bluetooth';
         container.innerHTML = `
           <div style="padding: 14px; text-align: center; color: #718096; font-family: 'Rajdhani', sans-serif; font-size: 13px; background: rgba(0,0,0,0.25); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
             <p style="margin: 0 0 6px 0; color: #a0aec0; font-weight: 700;">No hay dispositivos detectados todavía</p>
-            Toca el botón verde <strong>🔍 ESCANEAR DISPOSITIVOS REALES</strong> o vincula tu coche en <strong>Ajustes de Android</strong>.
+            Toca el botón verde <strong>🔍 ESCANEAR DISPOSITIVOS REALES</strong> o vincula tu coche en <strong>${helpPlace}</strong>.
           </div>
         `;
         return;
@@ -256,7 +294,7 @@
           <div class="bt-dev-info">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span class="bt-dev-name">${dev.name}</span>
-              <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; font-family: 'Orbitron', sans-serif; background: ${dev.tag?.includes('VINCULADO') ? 'rgba(0,229,255,0.2)' : 'rgba(57,255,20,0.2)'}; color: ${dev.tag?.includes('VINCULADO') ? '#00e5ff' : '#39ff14'};">
+              <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; font-family: 'Orbitron', sans-serif; background: ${dev.tag?.includes('VINCULADO') || dev.tag?.includes('CONECTADO') ? 'rgba(0,229,255,0.2)' : 'rgba(57,255,20,0.2)'}; color: ${dev.tag?.includes('VINCULADO') || dev.tag?.includes('CONECTADO') ? '#00e5ff' : '#39ff14'};">
                 ${dev.tag || 'REAL'}
               </span>
             </div>
@@ -277,16 +315,16 @@
     _selectDevice(name, mac) {
       this.settings.selectedDevice = name;
       this.settings.selectedMac = mac;
-      this.settings.isConnected = true;
-      this._registerDevice(name, mac, 'VINCULADO');
+      this.settings.isConnected = true; // Al elegir tu coche, queda vinculado y listo
+      this._registerDevice(name, mac, 'SELECCIONADO');
       this._saveSettings();
-      this._renderDeviceList();
       this._updateStatusUI();
+      this._renderDeviceList();
       this._dispatchChange();
 
-      // Intentar conectar al dispositivo si hay cliente nativo
+      // Si existe Capacitor BluetoothLe, conectamos al periférico
       const BlePlugin = window.Capacitor?.Plugins?.BluetoothLe;
-      if (BlePlugin && mac && mac.includes(':')) {
+      if (BlePlugin && mac && mac !== 'Configurado por usuario') {
         BlePlugin.connect({ deviceId: mac, timeout: 5000 }).catch(e => {
           console.log('[Bluetooth] Conexión GATT informativa:', e);
         });
@@ -297,11 +335,62 @@
       }
     }
 
+    async _openSystemBluetoothSettings() {
+      const isIos = this._isIos();
+      console.log('[Bluetooth] Abriendo Ajustes de Bluetooth del sistema. isIos:', isIos);
+
+      // 1. Intentar plugin nativo específico NativeSettings (en iOS)
+      if (window.Capacitor?.Plugins?.NativeSettings?.openBluetooth) {
+        try {
+          const res = await window.Capacitor.Plugins.NativeSettings.openBluetooth();
+          console.log('[Bluetooth] NativeSettings.openBluetooth resultado:', res);
+          if (res && res.opened) return;
+        } catch (e) {
+          console.warn('[BT] NativeSettings.openBluetooth aviso:', e);
+        }
+      }
+
+      // 2. Intentar plugin oficial Capacitor BluetoothLe (openBluetoothSettings / openAppSettings)
+      const BlePlugin = window.Capacitor?.Plugins?.BluetoothLe;
+      if (BlePlugin) {
+        try {
+          if (typeof BlePlugin.openBluetoothSettings === 'function') {
+            await BlePlugin.openBluetoothSettings();
+            return;
+          }
+          if (typeof BlePlugin.openAppSettings === 'function') {
+            await BlePlugin.openAppSettings();
+            return;
+          }
+        } catch (e) {
+          console.warn('[BT] BlePlugin open settings aviso:', e);
+        }
+      }
+
+      // 3. Si estamos en iOS, intentar esquemas URL de Ajustes nativos de Apple
+      if (isIos) {
+        try {
+          window.location.href = 'App-Prefs:root=Bluetooth';
+          return;
+        } catch (_) {}
+        try {
+          window.location.href = 'App-Prefs:Bluetooth';
+          return;
+        } catch (_) {}
+      }
+
+      // 4. Mensaje informativo adaptado al sistema
+      const msg = isIos
+        ? 'Abre la app Ajustes ➔ Bluetooth en tu iPhone para vincular tu vehículo o accesorio.'
+        : 'Abre los Ajustes de Bluetooth de tu teléfono para vincular tu vehículo.';
+      alert(msg);
+    }
+
     _bindEvents() {
       const closeBtn = document.getElementById('rwBtClose');
       const toggleBtn = document.getElementById('rwBtToggleConn');
       const scanBtn = document.getElementById('rwBtScanRealBtn');
-      const openSettingsBtn = document.getElementById('rwBtOpenAndroidSettings');
+      const openSettingsBtn = document.getElementById('rwBtOpenNativeSettings');
       const stopScanBtn = document.getElementById('rwBtStopScanBtn');
       const addBtn = document.getElementById('rwBtAddDevBtn');
       const customInput = document.getElementById('rwBtCustomInput');
@@ -321,19 +410,10 @@
         });
       }
 
-      // 2. Abrir Ajustes Nativos de Bluetooth de Android
+      // 2. Abrir Ajustes Nativos de Bluetooth del Sistema (iOS o Android)
       if (openSettingsBtn) {
         openSettingsBtn.addEventListener('click', async () => {
-          const BlePlugin = window.Capacitor?.Plugins?.BluetoothLe;
-          if (BlePlugin && typeof BlePlugin.openBluetoothSettings === 'function') {
-            try {
-              await BlePlugin.openBluetoothSettings();
-            } catch (e) {
-              console.warn('[BT] Error abriendo ajustes:', e);
-            }
-          } else {
-            alert('Abre los Ajustes de Bluetooth de tu teléfono Android para vincular tu vehículo.');
-          }
+          await this._openSystemBluetoothSettings();
         });
       }
 
@@ -368,6 +448,7 @@
         });
       }
 
+      // 5. Configuración de Auto-Arranque
       if (autoRecordCb) {
         autoRecordCb.addEventListener('change', (e) => {
           this.settings.autoRecord = e.target.checked;
@@ -409,18 +490,20 @@
       try {
         const BlePlugin = window.Capacitor?.Plugins?.BluetoothLe;
 
-        // Si estamos en Android con Capacitor
+        // Si estamos en un dispositivo móvil con Capacitor (iOS o Android)
         if (BlePlugin) {
           try {
             await BlePlugin.initialize({ androidNeverForLocation: false });
             
             // Verificar si el Bluetooth está encendido
-            const isEnabled = await BlePlugin.isEnabled();
-            if (!isEnabled.value) {
-              await BlePlugin.requestEnable();
-            }
+            try {
+              const isEnabled = await BlePlugin.isEnabled();
+              if (isEnabled && !isEnabled.value && typeof BlePlugin.requestEnable === 'function') {
+                await BlePlugin.requestEnable();
+              }
+            } catch (_) {}
 
-            // Obtener primero todos los dispositivos ya vinculados
+            // Obtener primero todos los dispositivos ya vinculados / conectados
             await this.loadBondedDevices();
 
             // Escuchar los resultados del escaneo activo de ondas

@@ -61,6 +61,11 @@
 	<array>
 		<string>location</string>
 	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>App-Prefs</string>
+		<string>prefs</string>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

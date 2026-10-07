@@ -15,6 +15,7 @@
 		504EC31C1FED79650016851F /* RouteDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC31B1FED79650016851F /* RouteDataStore.swift */; };
 		504EC31E1FED79650016851F /* GPXExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC31D1FED79650016851F /* GPXExporter.swift */; };
 		504EC32A1FED79650016851F /* KMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC32B1FED79650016851F /* KMLExporter.swift */; };
+		504EC32C1FED79650016851F /* NativeSettingsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC32D1FED79650016851F /* NativeSettingsPlugin.swift */; };
 		504EC3201FED79650016851F /* RouteMiniMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC31F1FED79650016851F /* RouteMiniMapView.swift */; };
 		504EC3221FED79650016851F /* RouteStatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3211FED79650016851F /* RouteStatsCalculator.swift */; };
 		504EC3241FED79650016851F /* RouteRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3231FED79650016851F /* RouteRepository.swift */; };
@@ -38,6 +39,7 @@
 		504EC31B1FED79650016851F /* RouteDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/RouteDataStore.swift; sourceTree = "<group>"; };
 		504EC31D1FED79650016851F /* GPXExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GPXExporter.swift; sourceTree = "<group>"; };
 		504EC32B1FED79650016851F /* KMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/KMLExporter.swift; sourceTree = "<group>"; };
+		504EC32D1FED79650016851F /* NativeSettingsPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/NativeSettingsPlugin.swift; sourceTree = "<group>"; };
 		504EC31F1FED79650016851F /* RouteMiniMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RouteMiniMapView.swift; sourceTree = "<group>"; };
 		504EC3211FED79650016851F /* RouteStatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/RouteStatsCalculator.swift; sourceTree = "<group>"; };
 		504EC3231FED79650016851F /* RouteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/RouteRepository.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				504EC31B1FED79650016851F /* RouteDataStore.swift */,
 				504EC31D1FED79650016851F /* GPXExporter.swift */,
 				504EC32B1FED79650016851F /* KMLExporter.swift */,
+				504EC32D1FED79650016851F /* NativeSettingsPlugin.swift */,
 				504EC31F1FED79650016851F /* RouteMiniMapView.swift */,
 				504EC3211FED79650016851F /* RouteStatsCalculator.swift */,
 				504EC3231FED79650016851F /* RouteRepository.swift */,
@@ -247,6 +250,7 @@
 				504EC31C1FED79650016851F /* RouteDataStore.swift in Sources */,
 				504EC31E1FED79650016851F /* GPXExporter.swift in Sources */,
 				504EC32A1FED79650016851F /* KMLExporter.swift in Sources */,
+				504EC32C1FED79650016851F /* NativeSettingsPlugin.swift in Sources */,
 				504EC3201FED79650016851F /* RouteMiniMapView.swift in Sources */,
 				504EC3221FED79650016851F /* RouteStatsCalculator.swift in Sources */,
 				504EC3241FED79650016851F /* RouteRepository.swift in Sources */,
