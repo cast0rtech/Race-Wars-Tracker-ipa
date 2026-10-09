@@ -101,6 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Tocar el velocímetro activa/desactiva el Modo HUD
+  const speedometerCenter = document.querySelector('.speedometer-centerpiece');
+  if (speedometerCenter) {
+    speedometerCenter.style.cursor = 'pointer';
+    speedometerCenter.title = 'Toca para alternar Modo HUD Parabrisas';
+    speedometerCenter.addEventListener('click', () => {
+      triggerHaptic(50);
+      if (window.HudMode) window.HudMode.toggle();
+    });
+  }
+
   // Radial Gauge Calculation (0 - 240 KM/H)
   const maxDashOffset = 480;
   const minDashOffset = 150;

@@ -8,8 +8,14 @@ public class NativeSettingsPlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "NativeSettings"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "openBluetooth", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setBrightness", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getBrightness", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "restoreBrightness", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setKeepScreenOn", returnType: CAPPluginReturnPromise)
     ]
+
+    private var previousBrightness: CGFloat?
 
     @objc func openBluetooth(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
@@ -50,6 +56,54 @@ public class NativeSettingsPlugin: CAPPlugin, CAPBridgedPlugin {
             } else {
                 call.resolve(["opened": false])
             }
+        }
+    }
+
+    @objc func setBrightness(_ call: CAPPluginCall) {
+        let val = call.getFloat("value") ?? 0.8
+        DispatchQueue.main.async {
+            if self.previousBrightness == nil {
+                self.previousBrightness = UIScreen.main.brightness
+            }
+            let target = CGFloat(min(max(val, 0.0), 1.0))
+            UIScreen.main.brightness = target
+            call.resolve([
+                "success": true,
+                "brightness": Float(target),
+                "previous": Float(self.previousBrightness ?? target)
+            ])
+        }
+    }
+
+    @objc func getBrightness(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            call.resolve([
+                "brightness": Float(UIScreen.main.brightness)
+            ])
+        }
+    }
+
+    @objc func restoreBrightness(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            if let prev = self.previousBrightness {
+                UIScreen.main.brightness = prev
+                self.previousBrightness = nil
+            }
+            call.resolve([
+                "success": true,
+                "brightness": Float(UIScreen.main.brightness)
+            ])
+        }
+    }
+
+    @objc func setKeepScreenOn(_ call: CAPPluginCall) {
+        let enable = call.getBool("enabled") ?? true
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = enable
+            call.resolve([
+                "success": true,
+                "isIdleTimerDisabled": enable
+            ])
         }
     }
 }

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="core/theme-modal.css">
   <link rel="stylesheet" href="core/saved-routes-modal.css">
   <link rel="stylesheet" href="core/gpx-share-modal.css">
+  <link rel="stylesheet" href="core/hud-mode.css">
 </head>
 <body>
   <div class="viewport-wrapper">
@@ -44,6 +45,12 @@
         </button>
 
         <div class="hud-profile-mode">
+          <button class="hud-mode-pill-btn" id="hudModeBtn" title="Modo HUD Parabrisas (Espejo y Brillo 80%)" aria-label="Modo HUD">
+            <svg class="hud-btn-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 16V4m0 0L3 8m4-4l4 4m6 4v12m0 0l4-4m-4 4l-4-4"/>
+            </svg>
+            <span class="hud-btn-text">HUD</span>
+          </button>
           <span class="status-chip live-chip" id="recStatusChip">STANDBY</span>
         </div>
       </header>
@@ -218,6 +225,7 @@
   <script src="core/theme-modal.js"></script>
   <script src="core/saved-routes-modal.js"></script>
   <script src="core/gpx-share-modal.js"></script>
+  <script src="core/hud-mode.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

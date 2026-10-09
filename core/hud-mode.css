@@ -1,0 +1,215 @@
+/* ==========================================================================
+   RACE WARS TRACKER - MODO HUD PARABRISAS (HEAD-UP DISPLAY)
+   Modo Espejo Invertido, Pantalla Negra Alto Contraste y Brillo al 80%
+   ========================================================================== */
+
+/* Botón HUD en la cabecera del Cockpit */
+.hud-profile-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-mode-pill-btn {
+  background: rgba(14, 20, 28, 0.85);
+  border: 1px solid rgba(0, 229, 255, 0.35);
+  border-radius: 16px;
+  color: var(--tesla-cyan);
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.12);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hud-mode-pill-btn:hover {
+  background: rgba(0, 229, 255, 0.15);
+  border-color: var(--tesla-cyan);
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.hud-mode-pill-btn:active {
+  transform: scale(0.96);
+}
+
+.hud-mode-pill-btn.is-active {
+  background: var(--tesla-cyan);
+  color: #0b0e14;
+  border-color: #ffffff;
+  box-shadow: 0 0 20px var(--tesla-cyan-glow);
+}
+
+/* Estado ACTIVO del Modo HUD en el Body y Cockpit */
+body.hud-mode-active {
+  background-color: #000000 !important;
+  overflow: hidden !important;
+}
+
+body.hud-mode-active .viewport-wrapper {
+  background: #000000 !important;
+}
+
+body.hud-mode-active .carbon-bg {
+  background: #000000 !important;
+  opacity: 1 !important;
+}
+
+body.hud-mode-active .ambient-glow {
+  opacity: 0 !important;
+}
+
+/* Efecto Espejo Vertical (Predeterminado para parabrisas de automóvil) */
+body.hud-mode-active.hud-mirror-y #cockpit {
+  transform: scaleY(-1);
+  transform-origin: center center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Efecto Espejo Horizontal Alternativo */
+body.hud-mode-active.hud-mirror-x #cockpit {
+  transform: scaleX(-1);
+  transform-origin: center center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Optimización de Contraste Automotriz HUD en la Proyección */
+body.hud-mode-active .speedometer-centerpiece {
+  background: #05070a !important;
+  border: 1px solid rgba(0, 229, 255, 0.5) !important;
+  box-shadow: 0 0 35px rgba(0, 229, 255, 0.3) !important;
+}
+
+body.hud-mode-active .speed-digits-mono {
+  color: #00e5ff !important;
+  font-size: 5.2rem !important;
+  text-shadow: 
+    0 0 30px rgba(0, 229, 255, 0.9),
+    0 0 10px #00e5ff !important;
+}
+
+body.hud-mode-active .metric-card {
+  background: #05070a !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.9) !important;
+}
+
+body.hud-mode-active .metric-num {
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.6) !important;
+}
+
+body.hud-mode-active .altimetry-section {
+  background: #05070a !important;
+  border-color: rgba(0, 229, 255, 0.3) !important;
+}
+
+/* Barra Flotante de Controles HUD en Pantalla */
+.hud-floating-bar {
+  display: none;
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 15, 24, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 24px;
+  padding: 6px 14px;
+  z-index: 10000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 229, 255, 0.25);
+  align-items: center;
+  gap: 10px;
+}
+
+body.hud-mode-active .hud-floating-bar {
+  display: flex;
+}
+
+/* El control flotante se mantiene siempre legible para el conductor */
+body.hud-mode-active.hud-mirror-y .hud-floating-bar {
+  transform: translateX(-50%) scaleY(-1);
+}
+
+body.hud-mode-active.hud-mirror-x .hud-floating-bar {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+.hud-info-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-data);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--tesla-cyan);
+  letter-spacing: 1px;
+}
+
+.hud-radar-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tesla-cyan);
+  box-shadow: 0 0 8px var(--tesla-cyan);
+  animation: hudPulse 1.2s infinite;
+}
+
+@keyframes hudPulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+.hud-action-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  color: #f1f5f9;
+  font-family: var(--font-tech);
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.hud-action-btn:hover {
+  background: rgba(0, 229, 255, 0.2);
+  border-color: var(--tesla-cyan);
+  color: #ffffff;
+}
+
+.hud-exit-btn {
+  background: rgba(232, 33, 39, 0.25);
+  border: 1px solid rgba(232, 33, 39, 0.5);
+  color: #ff4d4f;
+  border-radius: 12px;
+  font-family: var(--font-tech);
+  font-size: 0.70rem;
+  font-weight: 800;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.hud-exit-btn:hover {
+  background: rgba(232, 33, 39, 0.9);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(232, 33, 39, 0.6);
+}
