@@ -36,12 +36,10 @@ for target_dir in [www_dir, ios_public_dir]:
 
     core_src = os.path.join(root_dir, 'core')
     core_dst = os.path.join(target_dir, 'core')
-    os.makedirs(core_dst, exist_ok=True)
+    if os.path.exists(core_dst):
+        shutil.rmtree(core_dst)
     if os.path.exists(core_src):
-        for cf in os.listdir(core_src):
-            cf_src = os.path.join(core_src, cf)
-            if os.path.isfile(cf_src):
-                shutil.copy2(cf_src, os.path.join(core_dst, cf))
-                copied += 1
+        shutil.copytree(core_src, core_dst)
+        copied += len(os.listdir(core_dst))
 
     print(f"Copied {copied} assets to {target_dir}")

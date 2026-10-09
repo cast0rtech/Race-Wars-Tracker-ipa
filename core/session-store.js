@@ -95,6 +95,48 @@
       modified = true;
     }
 
+    // 3. Recalcular distancia acumulada real si distanceKm es 0 o indefinida pero hay trackpoints
+    const distNum = Number(session.distanceKm);
+    if ((!Number.isFinite(distNum) || distNum <= 0) && trackpoints.length >= 2) {
+      let sumDistKm = 0;
+      for (let i = 1; i < trackpoints.length; i++) {
+        const p1 = trackpoints[i - 1];
+        const p2 = trackpoints[i];
+        const lat1 = Number(p1.lat !== undefined ? p1.lat : p1.latitude);
+        const lon1 = Number(p1.lng !== undefined ? p1.lng : (p1.lon !== undefined ? p1.lon : p1.longitude));
+        const lat2 = Number(p2.lat !== undefined ? p2.lat : p2.latitude);
+        const lon2 = Number(p2.lng !== undefined ? p2.lng : (p2.lon !== undefined ? p2.lon : p2.longitude));
+        if (Number.isFinite(lat1) && Number.isFinite(lon1) && Number.isFinite(lat2) && Number.isFinite(lon2)) {
+          const R = 6371;
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          sumDistKm += R * c;
+        }
+      }
+      if (sumDistKm > 0) {
+        session.distanceKm = parseFloat(sumDistKm.toFixed(2));
+        modified = true;
+      }
+    }
+
+    // 4. Recalcular duración y velocidad media si faltan
+    if ((!session.durationMs || session.durationMs <= 0) && trackpoints.length >= 2) {
+      const firstTs = trackpoints[0].timestamp || Date.parse(session.date || session.startedAt) || 0;
+      const lastTs = trackpoints[trackpoints.length - 1].timestamp || 0;
+      if (lastTs > firstTs) {
+        session.durationMs = lastTs - firstTs;
+        modified = true;
+      }
+    }
+    if ((!session.avgSpeedKmh || session.avgSpeedKmh <= 0) && session.distanceKm > 0 && session.durationMs > 0) {
+      session.avgSpeedKmh = Math.round(session.distanceKm / (session.durationMs / 3600000));
+      modified = true;
+    }
+
     return { session, modified };
   }
 

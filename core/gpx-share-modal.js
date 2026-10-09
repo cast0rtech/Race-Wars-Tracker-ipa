@@ -167,17 +167,32 @@
       const title = session?.title || 'Ruta Race Wars Tracker';
       const escapedTitle = this._escapeXml(title);
 
-      const trkptLines = points.map(p => {
-        const lat = p.lat !== undefined ? p.lat : p.latitude;
-        const lon = p.lng !== undefined ? p.lng : (p.lon !== undefined ? p.lon : p.longitude);
+      const trkptLines = points.map((p, index) => {
+        const lat = p.lat !== undefined ? Number(p.lat).toFixed(6) : Number(p.latitude).toFixed(6);
+        const lon = p.lng !== undefined ? Number(p.lng).toFixed(6) : (p.lon !== undefined ? Number(p.lon).toFixed(6) : Number(p.longitude).toFixed(6));
         const rawAlt = p.altitudeM !== undefined && p.altitudeM !== null ? p.altitudeM : (p.altitude !== undefined ? p.altitude : null);
         const hasAlt = rawAlt !== null && Number.isFinite(Number(rawAlt));
-        const eleLine = hasAlt ? `\t\t\t\t<ele>${rawAlt}</ele>\n` : '';
-        const d = new Date(p.timestamp || Date.now());
+        const eleLine = hasAlt ? `\t\t\t\t<ele>${Number(rawAlt).toFixed(1)}</ele>\n` : '';
+        const d = new Date(p.timestamp || (session?.startedAt ? session.startedAt + index * 1000 : Date.now()));
         const timeStr = (!isNaN(d.getTime())) ? d.toISOString().replace(/\.\d{3}Z$/, 'Z') : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
+        let rawSpeed = p.speedKmh !== undefined ? Number(p.speedKmh) : (p.speed !== undefined ? Number(p.speed) * 3.6 : null);
+        if ((rawSpeed === null || rawSpeed <= 0) && index > 0) {
+          const prev = points[index - 1];
+          const prevLat = Number(prev.lat ?? prev.latitude);
+          const prevLon = Number(prev.lng ?? prev.lon ?? prev.longitude);
+          const dtSec = Math.max(0.1, ((p.timestamp || 0) - (prev.timestamp || 0)) / 1000);
+          if (dtSec > 0 && dtSec < 3600) {
+            const dLat = (Number(lat) - prevLat) * Math.PI / 180;
+            const dLon = (Number(lon) - prevLon) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(prevLat * Math.PI / 180) * Math.cos(Number(lat) * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const distKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const imp = (distKm / dtSec) * 3600;
+            if (imp > 0 && imp <= 350) rawSpeed = imp;
+          }
+        }
+
         let speedLine = '';
-        const rawSpeed = p.speedKmh !== undefined ? Number(p.speedKmh) : (p.speed !== undefined ? Number(p.speed) * 3.6 : null);
         if (rawSpeed !== null && Number.isFinite(rawSpeed) && rawSpeed > 0) {
           const speedMps = (rawSpeed / 3.6).toFixed(2);
           speedLine = `\t\t\t\t<extensions>\n\t\t\t\t\t<gpxtpx:TrackPointExtension xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">\n\t\t\t\t\t\t<gpxtpx:speed>${speedMps}</gpxtpx:speed>\n\t\t\t\t\t</gpxtpx:TrackPointExtension>\n\t\t\t\t</extensions>\n`;

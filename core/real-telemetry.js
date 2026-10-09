@@ -75,17 +75,33 @@
      * Conecta con el plugin nativo NativeTracker (CLLocationManager en segundo plano)
      */
     async _initNativeTracker() {
-      if (window.Capacitor?.Plugins?.NativeTracker) {
-        try {
-          if (typeof window.Capacitor.Plugins.NativeTracker.addListener === 'function') {
-            await window.Capacitor.Plugins.NativeTracker.addListener('pointRecorded', (point) => {
-              this._handleNativePoint(point);
-            });
-            console.log('[Telemetry] Listener pointRecorded de NativeTracker configurado.');
+      let isConfigured = false;
+      const trySetup = async () => {
+        if (isConfigured) return true;
+        if (window.Capacitor?.Plugins?.NativeTracker) {
+          try {
+            if (typeof window.Capacitor.Plugins.NativeTracker.addListener === 'function') {
+              await window.Capacitor.Plugins.NativeTracker.addListener('pointRecorded', (point) => {
+                this._handleNativePoint(point);
+              });
+              isConfigured = true;
+              console.log('[Telemetry] Listener pointRecorded de NativeTracker configurado.');
+              return true;
+            }
+          } catch (e) {
+            console.warn('[Telemetry] Error configurando listener de NativeTracker:', e);
           }
-        } catch (e) {
-          console.warn('[Telemetry] Error configurando listener de NativeTracker:', e);
         }
+        return false;
+      };
+
+      if (!await trySetup()) {
+        const intervalId = setInterval(async () => {
+          if (await trySetup()) {
+            clearInterval(intervalId);
+          }
+        }, 400);
+        setTimeout(() => clearInterval(intervalId), 15000);
       }
     }
 
@@ -100,20 +116,50 @@
       this.lastFixTimestamp = Date.now();
       this.isSpeedEstimated = false;
 
-      const spdKmh = Number(point.speedKmh) || 0;
+      let spdKmh = Number(point.speedKmh) || 0;
+      if (spdKmh < 0) spdKmh = 0;
       this.currentSpeedKmh = Math.round(spdKmh);
       if (this.currentSpeedKmh > this.maxSpeedKmh && this.currentSpeedKmh <= 350) {
         this.maxSpeedKmh = this.currentSpeedKmh;
       }
 
-      if (point.altitude != null || point.altitudeM != null) {
-        this.currentAltitudeMeters = Math.round(point.altitude ?? point.altitudeM);
+      const rawAlt = (point.altitude != null || point.altitudeM != null) ? Number(point.altitude ?? point.altitudeM) : null;
+      if (rawAlt !== null && Number.isFinite(rawAlt)) {
+        this.currentAltitudeMeters = Math.round(rawAlt);
         this.altitudeAvailable = true;
       }
 
+      const ts = point.timestamp || Date.now();
+
       if (this.isRecording) {
+        // Acumular distancia si ya teníamos un punto previo
+        if (this.lastPosition) {
+          const deltaKm = this._haversineDistance(this.lastPosition.lat, this.lastPosition.lng, lat, lng);
+          const dtSec = Math.max(0.1, (ts - (this.lastPosition.timestamp || ts)) / 1000);
+          const impliedSpeed = (deltaKm / dtSec) * 3600;
+
+          // Si el hardware no dio velocidad pero nos hemos desplazado:
+          if (this.currentSpeedKmh <= 0 && impliedSpeed > 2 && impliedSpeed <= 350) {
+            this.currentSpeedKmh = Math.round(impliedSpeed);
+            if (this.currentSpeedKmh > this.maxSpeedKmh && this.currentSpeedKmh <= 350) {
+              this.maxSpeedKmh = this.currentSpeedKmh;
+            }
+          }
+
+          // Filtrar saltos cuánticos imposibles (> 350 km/h) y micro-ruido de GPS estático (< 2m si parado)
+          if (impliedSpeed <= 350 && (deltaKm > 0.002 || this.currentSpeedKmh > 1)) {
+            this.totalDistanceKm += deltaKm;
+          }
+
+          // Desnivel acumulado (+D / -D)
+          if (rawAlt !== null && this.lastPosition.altitude != null) {
+            const diffAlt = rawAlt - this.lastPosition.altitude;
+            if (diffAlt > 0.5) this.elevationGainMeters += diffAlt;
+            else if (diffAlt < -0.5) this.elevationLossMeters += Math.abs(diffAlt);
+          }
+        }
+
         const last = this.trackpoints[this.trackpoints.length - 1];
-        const ts = point.timestamp || Date.now();
         if (!last || Math.abs(ts - last.timestamp) >= 300) {
           this.trackpoints.push({
             timestamp: ts,
@@ -131,7 +177,7 @@
         }
       }
 
-      this.lastPosition = { lat, lng, timestamp: point.timestamp || Date.now(), accuracy: point.horizontalAccuracy || 5 };
+      this.lastPosition = { lat, lng, timestamp: ts, accuracy: point.horizontalAccuracy || 5, altitude: rawAlt };
       this._notifyStatus(`GPS NATIVO ACTIVO`, 'active');
       this._dispatchUpdate();
     }
@@ -613,36 +659,97 @@
     }
 
     _createSessionData(status) {
-      const altitudePoints = this.trackpoints.filter(point => Number.isFinite(point.altitudeM));
-      const peakAltitude = altitudePoints.reduce((value, point) => Math.max(value, point.altitudeM), -Infinity);
-      const minAltitude = altitudePoints.reduce((value, point) => Math.min(value, point.altitudeM), Infinity);
+      const validPoints = (this.trackpoints || []).filter(p => {
+        const lat = p.lat !== undefined ? Number(p.lat) : Number(p.latitude);
+        const lon = p.lng !== undefined ? Number(p.lng) : (p.lon !== undefined ? Number(p.lon) : Number(p.longitude));
+        return Number.isFinite(lat) && Number.isFinite(lon);
+      });
 
-      // Calcular velocidad máxima verificada a partir de los puntos limpios (máx 350 km/h)
-      const validSpeeds = this.trackpoints
-        .map(p => Number(p.speedKmh))
-        .filter(s => Number.isFinite(s) && s > 0 && s <= 350);
-      const cleanMaxFromPoints = validSpeeds.length ? Math.round(Math.max(...validSpeeds)) : 0;
-      const cleanMaxSpeed = (this.maxSpeedKmh > 0 && this.maxSpeedKmh <= 350)
-        ? Math.max(this.maxSpeedKmh, cleanMaxFromPoints)
-        : cleanMaxFromPoints;
+      // Recalcular distancia, velocidades y desniveles acumulados a partir de los puntos reales
+      let calculatedDistKm = 0;
+      let calculatedGainM = 0;
+      let calculatedLossM = 0;
+      let calculatedMaxSpeed = 0;
+      const speedSamples = [];
+
+      for (let i = 0; i < validPoints.length; i++) {
+        const p = validPoints[i];
+        const lat = p.lat !== undefined ? Number(p.lat) : Number(p.latitude);
+        const lon = p.lng !== undefined ? Number(p.lng) : (p.lon !== undefined ? Number(p.lon) : Number(p.longitude));
+        const alt = p.altitudeM !== undefined && p.altitudeM !== null ? Number(p.altitudeM) : (p.altitude !== undefined ? Number(p.altitude) : null);
+        let spd = p.speedKmh !== undefined ? Number(p.speedKmh) : (p.speed !== undefined ? Number(p.speed) * 3.6 : 0);
+
+        if (i > 0) {
+          const prev = validPoints[i - 1];
+          const prevLat = prev.lat !== undefined ? Number(prev.lat) : Number(prev.latitude);
+          const prevLon = prev.lng !== undefined ? Number(prev.lng) : (prev.lon !== undefined ? Number(prev.lon) : Number(prev.longitude));
+          const stepKm = this._haversineDistance(prevLat, prevLon, lat, lon);
+          const dtSec = Math.max(0.1, ((p.timestamp || 0) - (prev.timestamp || 0)) / 1000);
+          const impliedSpeed = (stepKm / dtSec) * 3600;
+
+          if ((!spd || spd <= 0) && impliedSpeed > 2 && impliedSpeed <= 350) {
+            spd = impliedSpeed;
+            p.speedKmh = Math.round(spd);
+            p.speed = spd / 3.6;
+          }
+
+          if (impliedSpeed <= 350) {
+            calculatedDistKm += stepKm;
+          }
+
+          const prevAlt = prev.altitudeM !== undefined && prev.altitudeM !== null ? Number(prev.altitudeM) : (prev.altitude !== undefined ? Number(prev.altitude) : null);
+          if (alt !== null && prevAlt !== null && Number.isFinite(alt) && Number.isFinite(prevAlt)) {
+            const dAlt = alt - prevAlt;
+            if (dAlt > 0.5) calculatedGainM += dAlt;
+            else if (dAlt < -0.5) calculatedLossM += Math.abs(dAlt);
+          }
+        }
+
+        if (Number.isFinite(spd) && spd > 0 && spd <= 350) {
+          calculatedMaxSpeed = Math.max(calculatedMaxSpeed, spd);
+          speedSamples.push(spd);
+        }
+      }
+
+      const finalDistanceKm = Math.max(this.totalDistanceKm || 0, calculatedDistKm);
+      const altitudePoints = validPoints.filter(p => Number.isFinite(p.altitudeM ?? p.altitude));
+      const peakAltitude = altitudePoints.length
+        ? altitudePoints.reduce((max, p) => Math.max(max, Number(p.altitudeM ?? p.altitude)), -Infinity)
+        : null;
+      const minAltitude = altitudePoints.length
+        ? altitudePoints.reduce((min, p) => Math.min(min, Number(p.altitudeM ?? p.altitude)), Infinity)
+        : null;
+
+      const durationMs = this.elapsedMs > 0
+        ? this.elapsedMs
+        : (validPoints.length >= 2 ? Math.max(1000, (validPoints[validPoints.length - 1].timestamp || 0) - (validPoints[0].timestamp || 0)) : 0);
+
+      let avgSpeed = 0;
+      if (durationMs > 0 && finalDistanceKm > 0) {
+        avgSpeed = Math.round(finalDistanceKm / (durationMs / 3600000));
+      } else if (speedSamples.length > 0) {
+        avgSpeed = Math.round(speedSamples.reduce((a, b) => a + b, 0) / speedSamples.length);
+      }
+
+      const cleanMaxSpeed = Math.round(Math.max(this.maxSpeedKmh > 0 && this.maxSpeedKmh <= 350 ? this.maxSpeedKmh : 0, calculatedMaxSpeed));
 
       return {
         id: this.recordingSessionId || ('session_' + this.recordStartTime),
         status,
-        title: `Ruta GPS Real ${new Date(this.recordStartTime).toLocaleTimeString()}`,
-        startedAt: this.recordStartTime,
+        title: `Ruta GPS Real ${new Date(this.recordStartTime || Date.now()).toLocaleTimeString()}`,
+        startedAt: this.recordStartTime || (validPoints[0]?.timestamp) || Date.now(),
         endedAt: status === 'COMPLETED' ? Date.now() : null,
         date: new Date(this.recordStartTime || Date.now()).toISOString(),
-        durationMs: this.elapsedMs,
-        distanceKm: parseFloat(this.totalDistanceKm.toFixed(2)),
-        avgSpeedKmh: this.elapsedMs > 0 ? Math.round(this.totalDistanceKm / (this.elapsedMs / 3600000)) : 0,
+        durationMs: durationMs,
+        distanceKm: parseFloat(finalDistanceKm.toFixed(2)),
+        avgSpeedKmh: avgSpeed,
         maxSpeedKmh: cleanMaxSpeed,
-        elevationGainM: altitudePoints.length ? Math.round(this.elevationGainMeters) : null,
-        elevationLossM: altitudePoints.length ? Math.round(this.elevationLossMeters) : null,
-        peakAltitudeM: altitudePoints.length ? Math.round(peakAltitude) : null,
-        minAltitudeM: altitudePoints.length ? Math.round(minAltitude) : null,
-        trackpointsCount: this.trackpoints.length,
-        trackpoints: this.trackpoints
+        elevationGainM: altitudePoints.length ? Math.round(Math.max(this.elevationGainMeters || 0, calculatedGainM)) : null,
+        elevationLossM: altitudePoints.length ? Math.round(Math.max(this.elevationLossMeters || 0, calculatedLossM)) : null,
+        peakAltitudeM: peakAltitude != null && Number.isFinite(peakAltitude) ? Math.round(peakAltitude) : null,
+        minAltitudeM: minAltitude != null && Number.isFinite(minAltitude) ? Math.round(minAltitude) : null,
+        trackpointsCount: validPoints.length,
+        trackpoints: validPoints
       };
     }
 

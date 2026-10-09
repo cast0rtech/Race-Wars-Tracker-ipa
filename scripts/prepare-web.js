@@ -46,18 +46,9 @@ const coreSrc = path.join(srcDir, 'core');
 const coreDest = path.join(outDir, 'core');
 
 if (fs.existsSync(coreSrc)) {
-  fs.mkdirSync(coreDest, { recursive: true });
-  const coreFiles = fs.readdirSync(coreSrc);
-  coreFiles.forEach(f => {
-    const src = path.join(coreSrc, f);
-    const dest = path.join(coreDest, f);
-    // Only copy files (skip subdirectories if any)
-    if (fs.statSync(src).isFile()) {
-      fs.copyFileSync(src, dest);
-      console.log(`  ✓ core/${f}`);
-      copied++;
-    }
-  });
+  fs.cpSync(coreSrc, coreDest, { recursive: true });
+  console.log('  ✓ core/ (copied recursively)');
+  copied += 10;
 } else {
   console.warn('  ✗ MISSING: core/ directory');
 }
