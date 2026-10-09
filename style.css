@@ -43,11 +43,15 @@
 body.theme-light, [data-theme="light"] {
   --bg-deep: #f1f5f9;
   --bg-surface: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card: #ffffff;
   --bg-card-border: rgba(0, 0, 0, 0.08);
   --text-main: #0f172a;
   --text-muted: #475569;
   --text-dim: #94a3b8;
+  --tesla-cyan: #0284c7;
+  --tesla-cyan-glow: rgba(2, 132, 199, 0.25);
+  --accent: #0284c7;
+  --accent-glow: rgba(2, 132, 199, 0.25);
 }
 
 body.theme-racing-red {
@@ -65,6 +69,27 @@ body.theme-amber-gold {
 body.theme-stealth-silver {
   --accent: var(--tesla-silver);
   --accent-glow: rgba(203, 213, 225, 0.4);
+}
+
+body.theme-light.theme-racing-red,
+[data-theme="light"].theme-racing-red {
+  --accent: var(--tesla-red);
+  --accent-glow: var(--tesla-red-glow);
+}
+body.theme-light.theme-cyber-cyan,
+[data-theme="light"].theme-cyber-cyan {
+  --accent: #0284c7;
+  --accent-glow: rgba(2, 132, 199, 0.25);
+}
+body.theme-light.theme-amber-gold,
+[data-theme="light"].theme-amber-gold {
+  --accent: #d97706;
+  --accent-glow: rgba(217, 119, 6, 0.25);
+}
+body.theme-light.theme-stealth-silver,
+[data-theme="light"].theme-stealth-silver {
+  --accent: #475569;
+  --accent-glow: rgba(71, 85, 105, 0.25);
 }
 
 * {
@@ -108,11 +133,12 @@ html, body {
   position: relative;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: max(20px, env(safe-area-inset-top, 20px)) max(20px, env(safe-area-inset-right, 20px)) max(20px, env(safe-area-inset-bottom, 20px)) max(20px, env(safe-area-inset-left, 20px));
-  gap: 12px;
+  padding: max(48px, env(safe-area-inset-top, 48px)) max(14px, env(safe-area-inset-right, 14px)) max(16px, env(safe-area-inset-bottom, 16px)) max(14px, env(safe-area-inset-left, 14px));
+  gap: 8px;
   z-index: 1;
 }
 
@@ -202,7 +228,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
@@ -216,7 +242,7 @@ html, body {
   font-size: 0.95rem;
   font-weight: 900;
   letter-spacing: 2px;
-  color: #ffffff;
+  color: var(--text-main);
   line-height: 1;
 }
 
@@ -377,8 +403,8 @@ html, body {
 .cluster-zone {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 4px;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 /* 4 Tarjetas Satélite: Distancia, Tiempo, Desnivel Positivo (+D) y Meteo */
@@ -397,15 +423,15 @@ html, body {
 .metric-card {
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
-  border-radius: 16px;
-  padding: 10px 12px;
+  border-radius: 14px;
+  padding: 8px 10px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 76px;
+  min-height: 66px;
   transition: all 0.25s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
@@ -434,9 +460,14 @@ html, body {
   box-shadow: 0 0 6px var(--tesla-cyan);
 }
 
+.dot-cyan {
+  background: var(--tesla-cyan);
+  box-shadow: 0 0 6px var(--tesla-cyan);
+}
+
 .card-title {
   font-family: var(--font-tech);
-  font-size: 0.66rem;
+  font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.8px;
   color: var(--text-muted);
@@ -447,38 +478,43 @@ html, body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin: 4px 0 2px 0;
+  margin: 2px 0;
 }
 
 .metric-num {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: 1.22rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-main);
   letter-spacing: -0.5px;
   line-height: 1;
 }
 
 .font-mono {
   font-family: var(--font-mono) !important;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   letter-spacing: -0.2px;
 }
 
 .font-mono small {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--accent);
 }
 
 .metric-unit {
   font-family: var(--font-tech);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.5px;
 }
 
 .text-lime {
+  color: var(--tesla-cyan) !important;
+  text-shadow: 0 0 10px var(--tesla-cyan-glow);
+}
+
+.text-cyan {
   color: var(--tesla-cyan) !important;
   text-shadow: 0 0 10px var(--tesla-cyan-glow);
 }
@@ -493,7 +529,7 @@ html, body {
 
 .bar-fill {
   height: 100%;
-  background: #ffffff;
+  background: var(--text-main);
   border-radius: 3px;
 }
 
@@ -506,23 +542,27 @@ html, body {
   box-shadow: 0 0 6px var(--tesla-cyan-glow);
 }
 
+.bar-fill-cyan {
+  background: var(--tesla-cyan);
+}
+
 /* ==========================================================================
    2. VELOCÍMETRO DIGITAL CENTRAL DE GRAN TAMAÑO (ESTILO CLUSTER TESLA)
    ========================================================================== */
 .speedometer-centerpiece {
   position: relative;
   width: 100%;
-  height: 195px;
+  height: 165px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 50% 65%, rgba(18, 26, 40, 0.5) 0%, rgba(10, 14, 20, 0.7) 100%);
-  border-radius: 24px;
+  border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
 }
 
 .gauge-arc-track {
@@ -530,8 +570,8 @@ html, body {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 320px;
-  height: 180px;
+  width: 290px;
+  height: 165px;
   pointer-events: none;
 }
 
@@ -559,13 +599,13 @@ html, body {
 
 .speed-ticks {
   position: absolute;
-  bottom: 10px;
+  bottom: 8px;
   left: 24px;
   right: 24px;
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 500;
   color: var(--text-dim);
 }
@@ -577,13 +617,13 @@ html, body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .speed-header-label {
   font-family: var(--font-tech);
-  font-size: 0.7rem;
-  letter-spacing: 2.5px;
+  font-size: 0.68rem;
+  letter-spacing: 2.2px;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -593,37 +633,37 @@ html, body {
 .speed-digits-mono {
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
-  font-size: 5.6rem;
+  font-size: 4.6rem;
   font-weight: 800;
   line-height: 0.9;
-  letter-spacing: -3px;
-  color: #ffffff;
+  letter-spacing: -2px;
+  color: var(--text-main);
   text-shadow: 
     0 0 30px rgba(255, 255, 255, 0.25),
     0 0 12px var(--accent-glow);
-  margin: 2px 0;
+  margin: 0;
 }
 
 .speed-unit-sub {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .unit-main {
   font-family: var(--font-tech);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 2.5px;
   color: var(--text-muted);
 }
 
 .speed-max-tag {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: 6px;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-family: var(--font-mono);
   color: var(--text-muted);
 }
@@ -639,14 +679,14 @@ html, body {
 .altimetry-section {
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
-  border-radius: 20px;
-  padding: 12px 16px;
+  border-radius: 16px;
+  padding: 8px 12px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   position: relative;
   overflow: hidden;
-  margin: 6px 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  margin: 2px 0;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
 }
 
 .altimetry-section::before {
@@ -664,7 +704,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .alt-title-group {
@@ -674,14 +714,14 @@ html, body {
 }
 
 .alt-icon {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .alt-title {
   font-family: var(--font-tech);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   color: var(--text-muted);
   text-transform: uppercase;
 }
@@ -694,22 +734,22 @@ html, body {
 
 .alt-curr-lbl {
   font-family: var(--font-tech);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
 }
 
 .alt-curr-val {
   font-family: var(--font-mono);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  color: var(--tesla-cyan);
-  text-shadow: 0 0 8px var(--tesla-cyan-glow);
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--accent-glow);
 }
 
 .altimetry-canvas-container {
   position: relative;
   width: 100%;
-  height: 96px;
+  height: 64px;
 }
 
 #altimetryCanvas {
@@ -731,7 +771,7 @@ html, body {
 
 .alt-grid-label {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--text-dim);
   background: rgba(6, 8, 11, 0.6);
   padding: 1px 4px;
@@ -745,21 +785,21 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 6px;
+  margin-top: 2px;
 }
 
 .manual-override-btn {
   width: 100%;
-  height: 74px;
+  height: 56px;
   background: linear-gradient(135deg, rgba(232, 33, 39, 0.92) 0%, rgba(168, 16, 22, 0.95) 100%);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  border-radius: 16px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 8px 24px var(--tesla-red-glow),
+    0 6px 20px var(--tesla-red-glow),
     inset 0 1px 2px rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
@@ -769,7 +809,7 @@ html, body {
 
 .manual-override-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px var(--tesla-red-glow);
+  box-shadow: 0 10px 28px var(--tesla-red-glow);
 }
 
 .manual-override-btn:active {
@@ -801,7 +841,6 @@ html, body {
   100% { left: 160%; }
 }
 
-
 .btn-inner-core {
   display: flex;
   flex-direction: column;
@@ -813,28 +852,28 @@ html, body {
 .override-icon-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 2px;
+  gap: 5px;
+  margin-bottom: 1px;
 }
 
 .override-power-svg {
-  width: 16px;
-  height: 16px;
-  stroke: var(--neon-red);
-  filter: drop-shadow(0 0 5px var(--neon-red));
+  width: 14px;
+  height: 14px;
+  stroke: #ffffff;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
 }
 
 .override-sub {
   font-family: var(--font-data);
-  font-size: 0.65rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 2px;
-  color: var(--neon-red);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .override-main-text {
   font-family: var(--font-display);
-  font-size: 1.45rem;
+  font-size: 1.25rem;
   font-weight: 900;
   letter-spacing: 2px;
   color: #ffffff;
@@ -844,10 +883,10 @@ html, body {
 
 .override-prompt-caption {
   font-family: var(--font-tech);
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.55);
-  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 2px;
 }
 
 /* Estado ACTIVO de Grabación (STOP REC) */
@@ -881,14 +920,14 @@ html, body {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 6px 8px;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 4px 6px;
   background: rgba(14, 20, 28, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
 }
 
@@ -898,16 +937,16 @@ html, body {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
   color: #e2e8f0;
   font-family: var(--font-data);
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  padding: 11px 12px;
-  border-radius: 12px;
+  padding: 8px 4px;
+  border-radius: 10px;
   cursor: pointer;
   text-decoration: none;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -937,17 +976,260 @@ html, body {
 
 @media (max-width: 480px) {
   .bottom-menu-bar {
-    gap: 6px;
-    padding: 6px;
+    gap: 4px;
+    padding: 4px;
   }
   .menu-item-btn {
-    padding: 8px 4px;
-    gap: 3px;
-    font-size: 0.70rem;
+    padding: 6px 3px;
+    gap: 2px;
+    font-size: 0.66rem;
     flex-direction: column;
   }
   .menu-item-icon {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
   }
+}
+
+/* ==========================================================================
+   TESLA LIGHT THEME COMPREHENSIVE OVERRIDES (MODO CLARO GT)
+   ========================================================================== */
+body.theme-light .carbon-bg,
+[data-theme="light"] .carbon-bg {
+  background: 
+    radial-gradient(circle at 50% 12%, rgba(2, 132, 199, 0.06) 0%, transparent 60%),
+    radial-gradient(circle at 85% 85%, rgba(232, 33, 39, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+  opacity: 1;
+}
+
+body.theme-light .ambient-glow,
+[data-theme="light"] .ambient-glow {
+  opacity: 0.12;
+}
+
+body.theme-light .top-hud,
+[data-theme="light"] .top-hud {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .app-brand,
+[data-theme="light"] .app-brand {
+  color: #0f172a;
+}
+
+body.theme-light .app-tag,
+[data-theme="light"] .app-tag {
+  color: var(--accent);
+}
+
+body.theme-light .bt-status-pill,
+[data-theme="light"] .bt-status-pill {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body.theme-light .bt-status-pill.connected,
+[data-theme="light"] .bt-status-pill.connected {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.15);
+}
+
+body.theme-light .bt-status-pill.connected .bt-svg,
+[data-theme="light"] .bt-status-pill.connected .bt-svg {
+  stroke: #059669;
+  filter: none;
+}
+
+body.theme-light .bt-status-pill.connected .bt-beacon,
+[data-theme="light"] .bt-status-pill.connected .bt-beacon {
+  background: #059669;
+  box-shadow: 0 0 6px #059669;
+}
+
+body.theme-light .bt-status-pill.connected .bt-state-text,
+[data-theme="light"] .bt-status-pill.connected .bt-state-text {
+  color: #059669;
+}
+
+body.theme-light .bt-status-pill.disconnected,
+[data-theme="light"] .bt-status-pill.disconnected {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+body.theme-light .bt-status-pill.disconnected .bt-state-text,
+[data-theme="light"] .bt-status-pill.disconnected .bt-state-text {
+  color: #dc2626;
+}
+
+body.theme-light .live-chip,
+[data-theme="light"] .live-chip {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+
+/* Metric Cards in Light Mode */
+body.theme-light .metric-card,
+[data-theme="light"] .metric-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .metric-num,
+[data-theme="light"] .metric-num {
+  color: #0f172a;
+}
+
+body.theme-light .card-title,
+[data-theme="light"] .card-title {
+  color: #64748b;
+}
+
+body.theme-light .metric-unit,
+[data-theme="light"] .metric-unit {
+  color: #64748b;
+}
+
+body.theme-light .card-dot,
+[data-theme="light"] .card-dot {
+  background: #94a3b8;
+}
+
+body.theme-light .dot-lime,
+[data-theme="light"] .dot-lime,
+body.theme-light .dot-cyan,
+[data-theme="light"] .dot-cyan {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+body.theme-light .text-lime,
+[data-theme="light"] .text-lime,
+body.theme-light .text-cyan,
+[data-theme="light"] .text-cyan {
+  color: var(--accent) !important;
+  text-shadow: none;
+}
+
+body.theme-light .metric-progress-bar,
+[data-theme="light"] .metric-progress-bar {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light .bar-fill,
+[data-theme="light"] .bar-fill {
+  background: #0f172a;
+}
+
+body.theme-light .bar-fill-lime,
+[data-theme="light"] .bar-fill-lime,
+body.theme-light .bar-fill-cyan,
+[data-theme="light"] .bar-fill-cyan {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+/* Speedometer Centerpiece in Light Mode */
+body.theme-light .speedometer-centerpiece,
+[data-theme="light"] .speedometer-centerpiece {
+  background: radial-gradient(circle at 50% 65%, #ffffff 0%, #f1f5f9 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light .radial-bg,
+[data-theme="light"] .radial-bg {
+  stroke: rgba(0, 0, 0, 0.07);
+}
+
+body.theme-light .speed-ticks,
+[data-theme="light"] .speed-ticks {
+  color: #64748b;
+}
+
+body.theme-light .speed-header-label,
+[data-theme="light"] .speed-header-label {
+  color: #64748b;
+}
+
+body.theme-light .speed-digits-mono,
+[data-theme="light"] .speed-digits-mono {
+  color: #0f172a;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .unit-main,
+[data-theme="light"] .unit-main {
+  color: #475569;
+}
+
+body.theme-light .speed-max-tag,
+[data-theme="light"] .speed-max-tag {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #64748b;
+}
+
+body.theme-light .speed-max-tag b,
+[data-theme="light"] .speed-max-tag b {
+  color: #0f172a;
+}
+
+/* Altimetry in Light Mode */
+body.theme-light .altimetry-section,
+[data-theme="light"] .altimetry-section {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+body.theme-light .alt-title,
+[data-theme="light"] .alt-title {
+  color: #475569;
+}
+
+body.theme-light .alt-curr-lbl,
+[data-theme="light"] .alt-curr-lbl {
+  color: #64748b;
+}
+
+body.theme-light .alt-curr-val,
+[data-theme="light"] .alt-curr-val {
+  color: var(--accent);
+  text-shadow: none;
+}
+
+body.theme-light .alt-grid-label,
+[data-theme="light"] .alt-grid-label {
+  background: rgba(241, 245, 249, 0.95);
+  color: #475569;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Bottom Menu Bar in Light Mode */
+body.theme-light .bottom-menu-bar,
+[data-theme="light"] .bottom-menu-bar {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+body.theme-light .menu-item-btn,
+[data-theme="light"] .menu-item-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #1e293b;
+}
+
+body.theme-light .menu-item-btn:hover,
+[data-theme="light"] .menu-item-btn:hover {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.15);
 }
 

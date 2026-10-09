@@ -350,3 +350,30 @@
   background: #ff1e44;
   color: #fff;
 }
+
+/* Light Mode Adaptations */
+body.theme-light .routes-modal-backdrop,
+[data-theme="light"] .routes-modal-backdrop {
+  background: rgba(15, 23, 42, 0.65);
+}
+
+body.theme-light .routes-modal-container,
+[data-theme="light"] .routes-modal-container {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+body.theme-light .route-card-item,
+[data-theme="light"] .route-card-item {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .routes-modal-close,
+[data-theme="light"] .routes-modal-close {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+

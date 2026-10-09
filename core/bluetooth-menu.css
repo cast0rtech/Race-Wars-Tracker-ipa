@@ -402,8 +402,116 @@
   }
 }
 
-.bt-settings-native-btn:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
+/* Light Mode Adaptations */
+body.theme-light .bt-modal-backdrop,
+[data-theme="light"] .bt-modal-backdrop {
+  background: rgba(15, 23, 42, 0.65);
 }
+
+body.theme-light .bt-modal-container,
+[data-theme="light"] .bt-modal-container {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 20px rgba(2, 132, 199, 0.15);
+  color: #0f172a;
+}
+
+body.theme-light .bt-title,
+[data-theme="light"] .bt-title {
+  color: #0f172a;
+}
+
+body.theme-light .bt-subtitle,
+[data-theme="light"] .bt-subtitle {
+  color: #475569;
+}
+
+body.theme-light .bt-current-card,
+[data-theme="light"] .bt-current-card {
+  background: #f1f5f9;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .bt-current-name,
+[data-theme="light"] .bt-current-name {
+  color: #0f172a;
+}
+
+body.theme-light .bt-toggle-conn-btn,
+[data-theme="light"] .bt-toggle-conn-btn {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #0f172a;
+}
+
+body.theme-light .bt-section-label,
+[data-theme="light"] .bt-section-label {
+  color: #475569;
+}
+
+body.theme-light .bt-device-item,
+[data-theme="light"] .bt-device-item {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .bt-device-item.is-selected,
+[data-theme="light"] .bt-device-item.is-selected {
+  background: rgba(2, 132, 199, 0.08);
+  border-color: #0284c7;
+}
+
+body.theme-light .bt-dev-name,
+[data-theme="light"] .bt-dev-name {
+  color: #0f172a;
+}
+
+body.theme-light .bt-text-input,
+[data-theme="light"] .bt-text-input {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #0f172a;
+}
+
+body.theme-light .bt-text-input::placeholder,
+[data-theme="light"] .bt-text-input::placeholder {
+  color: #94a3b8;
+}
+
+body.theme-light .bt-add-btn,
+[data-theme="light"] .bt-add-btn {
+  background: rgba(2, 132, 199, 0.12);
+  border-color: rgba(2, 132, 199, 0.35);
+  color: #0284c7;
+}
+
+body.theme-light .bt-settings-toggles,
+[data-theme="light"] .bt-settings-toggles {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .bt-toggle-title,
+[data-theme="light"] .bt-toggle-title {
+  color: #0f172a;
+}
+
+body.theme-light .bt-toggle-sub,
+[data-theme="light"] .bt-toggle-sub {
+  color: #64748b;
+}
+
+body.theme-light .bt-select-native,
+[data-theme="light"] .bt-select-native {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #0f172a;
+}
+
+body.theme-light .bt-modal-close,
+[data-theme="light"] .bt-modal-close {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+

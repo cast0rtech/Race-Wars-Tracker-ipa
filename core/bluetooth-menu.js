@@ -72,9 +72,6 @@
         return;
       }
 
-      const isIos = this._isIos();
-      const settingsBtnText = isIos ? '⚙️ ABRIR AJUSTES BLUETOOTH DE IPHONE' : '⚙️ ABRIR AJUSTES BLUETOOTH';
-
       const backdrop = document.createElement('div');
       backdrop.id = 'rwBtModalBackdrop';
       backdrop.className = 'bt-modal-backdrop';
@@ -120,10 +117,6 @@
                 <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
               </svg>
               <span id="rwBtScanBtnText">🔍 ESCANEAR DISPOSITIVOS REALES</span>
-            </button>
-
-            <button class="bt-settings-native-btn" id="rwBtOpenNativeSettings" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #a0aec0; padding: 8px 12px; font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <span id="rwBtSettingsLabel">${settingsBtnText}</span>
             </button>
           </div>
 
@@ -275,12 +268,10 @@
       }
 
       if (allDevices.length === 0) {
-        const isIos = this._isIos();
-        const helpPlace = isIos ? 'Ajustes ➔ Bluetooth de tu iPhone' : 'Ajustes de Bluetooth';
         container.innerHTML = `
           <div style="padding: 14px; text-align: center; color: #718096; font-family: 'Rajdhani', sans-serif; font-size: 13px; background: rgba(0,0,0,0.25); border-radius: 10px; border: 1px dashed rgba(255,255,255,0.1);">
             <p style="margin: 0 0 6px 0; color: #a0aec0; font-weight: 700;">No hay dispositivos detectados todavía</p>
-            Toca el botón verde <strong>🔍 ESCANEAR DISPOSITIVOS REALES</strong> o vincula tu coche en <strong>${helpPlace}</strong>.
+            Toca el botón verde <strong>🔍 ESCANEAR DISPOSITIVOS REALES</strong> para buscar dispositivos cercanos o introduce el nombre abajo.
           </div>
         `;
         return;
@@ -390,7 +381,6 @@
       const closeBtn = document.getElementById('rwBtClose');
       const toggleBtn = document.getElementById('rwBtToggleConn');
       const scanBtn = document.getElementById('rwBtScanRealBtn');
-      const openSettingsBtn = document.getElementById('rwBtOpenNativeSettings');
       const stopScanBtn = document.getElementById('rwBtStopScanBtn');
       const addBtn = document.getElementById('rwBtAddDevBtn');
       const customInput = document.getElementById('rwBtCustomInput');
@@ -407,13 +397,6 @@
       if (scanBtn) {
         scanBtn.addEventListener('click', async () => {
           await this.scanRealHardwareDevices();
-        });
-      }
-
-      // 2. Abrir Ajustes Nativos de Bluetooth del Sistema (iOS o Android)
-      if (openSettingsBtn) {
-        openSettingsBtn.addEventListener('click', async () => {
-          await this._openSystemBluetoothSettings();
         });
       }
 

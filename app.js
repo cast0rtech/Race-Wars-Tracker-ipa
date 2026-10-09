@@ -250,8 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
     altMinLbl.textContent = `${Math.round(minAlt + 10)}m`;
     altMaxLbl.textContent = `${Math.round(maxAlt - 10)}m`;
 
+    const isLightMode = document.body.classList.contains('theme-light') || document.documentElement.getAttribute('data-theme') === 'light';
+
     // Horizontal guideline
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.strokeStyle = isLightMode ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, height / 2);
@@ -268,12 +270,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const isRedTheme = document.body.classList.contains('theme-racing-red');
-    const accentColor = isRedTheme ? '#ff1e44' : '#39ff14';
+    const accentColor = isRedTheme ? '#ff1e44' : (isLightMode ? '#0284c7' : '#00e5ff');
 
     // 1. Fill Gradient below line
     const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, isRedTheme ? 'rgba(255, 30, 68, 0.35)' : 'rgba(57, 255, 20, 0.35)');
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    if (isLightMode) {
+      grad.addColorStop(0, isRedTheme ? 'rgba(255, 30, 68, 0.25)' : 'rgba(2, 132, 199, 0.22)');
+      grad.addColorStop(1, 'rgba(2, 132, 199, 0.01)');
+    } else {
+      grad.addColorStop(0, isRedTheme ? 'rgba(255, 30, 68, 0.35)' : 'rgba(0, 229, 255, 0.35)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    }
 
     ctx.beginPath();
     ctx.moveTo(points[0].x, height);
@@ -301,8 +308,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
     ctx.strokeStyle = accentColor;
     ctx.lineWidth = 2.5;
-    ctx.shadowColor = accentColor;
-    ctx.shadowBlur = 10;
+    if (!isLightMode) {
+      ctx.shadowColor = accentColor;
+      ctx.shadowBlur = 10;
+    }
     ctx.stroke();
     ctx.shadowBlur = 0;
 
@@ -310,12 +319,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const lastP = points[points.length - 1];
     ctx.beginPath();
     ctx.arc(lastP.x, lastP.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.shadowColor = accentColor;
-    ctx.shadowBlur = 8;
+    ctx.fillStyle = isLightMode ? '#0f172a' : '#ffffff';
+    if (!isLightMode) {
+      ctx.shadowColor = accentColor;
+      ctx.shadowBlur = 8;
+    }
     ctx.fill();
     ctx.shadowBlur = 0;
   }
+
+  window.addEventListener('racewars:theme_changed', () => {
+    drawAltimetryGraph();
+  });
 
   // 4. BOTÓN MANUAL OVERRIDE (START / STOP RECORDING)
   overrideBtn.addEventListener('click', async () => {
