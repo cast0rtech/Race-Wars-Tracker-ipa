@@ -80,11 +80,11 @@ public final class LocationManager: NSObject, ObservableObject {
         // Alta precisión requerida para telemetría
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         
-        // Tipo de actividad físico/deportivo para optimizar los algoritmos de filtrado
-        locationManager.activityType = .fitness
+        // Tipo de actividad automovilística para telemetría de competición
+        locationManager.activityType = .automotiveNavigation
         
-        // Filtro de distancia en metros (5 metros según especificación)
-        locationManager.distanceFilter = 5.0
+        // Filtro de distancia en metros (2.0 metros como Open GPX Tracker)
+        locationManager.distanceFilter = 2.0
         
         // No permitir que iOS pause los updates automáticamente en reposo
         locationManager.pausesLocationUpdatesAutomatically = false
@@ -439,10 +439,11 @@ extension LocationManager: CLLocationManagerDelegate {
     
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         for location in locations {
-            // Filtrar lecturas antiguas o con precisión horizontal negativa/excesiva (> 50m)
-            guard location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= 50.0 else { continue }
+            // Filtrar lecturas inválidas (precisión negativa) o excesivamente imprecisas (> 150m)
+            // Siguiendo el estándar de Open GPX Tracker, no descartamos posiciones válidas por ligeras fluctuaciones
+            guard location.horizontalAccuracy >= 0 && location.horizontalAccuracy <= 150.0 else { continue }
             let ageSeconds = abs(location.timestamp.timeIntervalSinceNow)
-            guard ageSeconds < 10.0 else { continue }
+            guard ageSeconds < 25.0 else { continue }
             
             let point = NativeTelemetryPoint(location: location)
             guard point.speedKmh <= RouteStatsCalculator.maxRealisticSpeedKmh else { continue }
@@ -457,11 +458,11 @@ extension LocationManager: CLLocationManagerDelegate {
                 // Actualizar velocidad actual en km/h
                 self.currentSpeedKmh = point.speedKmh
                 
-                // Acumular distancia si estamos grabando
+                // Acumular distancia y registrar punto si estamos grabando
                 if self.isRecording {
                     if let last = self.currentLocation {
                         let stepMeters = location.distance(from: last)
-                        if stepMeters > 1.0 { // Filtrar micro-derivas de ruido estacionario
+                        if stepMeters > 0.5 { // Acumular distancia real
                             self.totalDistanceMeters += stepMeters
                         }
                     }

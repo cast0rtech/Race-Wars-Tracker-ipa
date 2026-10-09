@@ -95,7 +95,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     currentSession = session;
-    const points = (session.trackpoints || []).filter(point => Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)));
+    const getLat = p => (p && p.lat !== undefined ? Number(p.lat) : Number(p?.latitude));
+    const getLng = p => (p && p.lng !== undefined ? Number(p.lng) : (p?.lon !== undefined ? Number(p?.lon) : Number(p?.longitude)));
+    const isValidPoint = p => Number.isFinite(getLat(p)) && Number.isFinite(getLng(p));
+    const points = (session.trackpoints || []).filter(isValidPoint);
     const start = session.startedAt || Date.parse(session.date) || Date.now();
     const date = new Date(start);
     setMetric('#routeDate', `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
@@ -145,15 +148,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const route = document.getElementById('routeTrack');
     if (points.length > 0 && route) {
-      const lats = points.map(point => Number(point.lat));
-      const lngs = points.map(point => Number(point.lng));
+      const lats = points.map(getLat);
+      const lngs = points.map(getLng);
       const minLat = lats.reduce((a, b) => Math.min(a, b), Infinity);
       const maxLat = lats.reduce((a, b) => Math.max(a, b), -Infinity);
       const minLng = lngs.reduce((a, b) => Math.min(a, b), Infinity);
       const maxLng = lngs.reduce((a, b) => Math.max(a, b), -Infinity);
       const project = (point) => {
-        const x = 20 + ((Number(point.lng) - minLng) / Math.max(1e-9, maxLng - minLng)) * 360;
-        const y = 15 + ((maxLat - Number(point.lat)) / Math.max(1e-9, maxLat - minLat)) * 180;
+        const x = 20 + ((getLng(point) - minLng) / Math.max(1e-9, maxLng - minLng)) * 360;
+        const y = 15 + ((maxLat - getLat(point)) / Math.max(1e-9, maxLat - minLat)) * 180;
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       };
       const stride = Math.max(1, Math.ceil(points.length / 3000));
@@ -170,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!weatherTimeline) return;
       weatherTimeline.replaceChildren();
 
-      const points = (session.trackpoints || []).filter(p => Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)));
+      const points = (session.trackpoints || []).filter(isValidPoint);
       if (points.length === 0) {
         const p = document.createElement('p');
         p.textContent = 'Sin datos GPS para consultar el tiempo.';
@@ -193,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         let hum = '65%';
 
         try {
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${Number(pt.lat).toFixed(4)}&longitude=${Number(pt.lng).toFixed(4)}&current=temperature_2m,relative_humidity_2m,weather_code`);
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${Number(getLat(pt)).toFixed(4)}&longitude=${Number(getLng(pt)).toFixed(4)}&current=temperature_2m,relative_humidity_2m,weather_code`);
           if (res.ok) {
             const data = await res.json();
             const curr = data.current || {};
@@ -268,7 +271,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (exportBtn) exportBtn.addEventListener('click', () => {
     if (!currentSession) return showMessage('No hay una sesión guardada para exportar.', true);
-    const points = (currentSession.trackpoints || []).filter(point => Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)));
+    const getLat = p => (p && p.lat !== undefined ? Number(p.lat) : Number(p?.latitude));
+    const getLng = p => (p && p.lng !== undefined ? Number(p.lng) : (p?.lon !== undefined ? Number(p?.lon) : Number(p?.longitude)));
+    const points = (currentSession.trackpoints || []).filter(p => Number.isFinite(getLat(p)) && Number.isFinite(getLng(p)));
     if (!points.length) return showMessage('Esta sesión no tiene puntos GPS exportables.', true);
     if (window.GpxShareModal) {
       window.GpxShareModal.open(currentSession);

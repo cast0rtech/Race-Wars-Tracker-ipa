@@ -572,6 +572,27 @@ ${gxCoords.join('\n')}
       if (actionExportGpx) {
         actionExportGpx.addEventListener('click', async () => {
           if (!this.currentSession) return;
+          const points = this._getValidPoints(this.currentSession);
+          if (points.length === 0) {
+            this._showToast('⚠️ No hay puntos GPS válidos para exportar.');
+            return;
+          }
+
+          // Prioridad: Si estamos en iOS nativo, usar NativeTracker para abrir la hoja de compartir de iOS (Archivos/AirDrop)
+          if (window.Capacitor?.Plugins?.NativeTracker?.exportGPX) {
+            try {
+              this._showToast('Generando GPX nativo...');
+              await window.Capacitor.Plugins.NativeTracker.exportGPX({
+                routeName: this.currentSession.title || 'Ruta Race Wars Tracker',
+                points: points
+              });
+              this._showToast('✓ Hoja de compartir GPX abierta.');
+              return;
+            } catch (err) {
+              console.warn('[GpxShareModal] NativeTracker.exportGPX error, usando fallback:', err);
+            }
+          }
+
           const gpxStr = this._makeGpx(this.currentSession);
           const dateStr = new Date(this.currentSession.startedAt || Date.now()).toISOString().replace(/[:.]/g, '-').slice(0, 19);
           const file = new File([gpxStr], `RaceWars_${dateStr}.gpx`, { type: 'application/gpx+xml' });
@@ -583,6 +604,27 @@ ${gxCoords.join('\n')}
       if (actionExportKml) {
         actionExportKml.addEventListener('click', async () => {
           if (!this.currentSession) return;
+          const points = this._getValidPoints(this.currentSession);
+          if (points.length === 0) {
+            this._showToast('⚠️ No hay puntos GPS válidos para exportar.');
+            return;
+          }
+
+          // Prioridad: Si estamos en iOS nativo, usar NativeTracker para abrir la hoja de compartir de iOS
+          if (window.Capacitor?.Plugins?.NativeTracker?.exportKML) {
+            try {
+              this._showToast('Generando KML nativo...');
+              await window.Capacitor.Plugins.NativeTracker.exportKML({
+                routeName: this.currentSession.title || 'Ruta Race Wars Tracker',
+                points: points
+              });
+              this._showToast('✓ Hoja de compartir KML abierta.');
+              return;
+            } catch (err) {
+              console.warn('[GpxShareModal] NativeTracker.exportKML error, usando fallback:', err);
+            }
+          }
+
           const kmlStr = this._makeKml(this.currentSession);
           const dateStr = new Date(this.currentSession.startedAt || Date.now()).toISOString().replace(/[:.]/g, '-').slice(0, 19);
           const file = new File([kmlStr], `RaceWars_${dateStr}.kml`, { type: 'application/vnd.google-earth.kml+xml' });
@@ -594,6 +636,11 @@ ${gxCoords.join('\n')}
       if (actionExportZip) {
         actionExportZip.addEventListener('click', async () => {
           if (!this.currentSession) return;
+          const points = this._getValidPoints(this.currentSession);
+          if (points.length === 0) {
+            this._showToast('⚠️ No hay puntos GPS válidos para exportar.');
+            return;
+          }
           const gpxStr = this._makeGpx(this.currentSession);
           const kmlStr = this._makeKml(this.currentSession);
           const zipBlob = this._makeZipBlob(gpxStr, kmlStr, this.currentSession);
@@ -643,7 +690,7 @@ ${gxCoords.join('\n')}
       }
     }
 
-    open(session) {
+    async open(session) {
       if (window.RaceWarsSessionStore && typeof window.RaceWarsSessionStore.sanitizeSession === 'function') {
         const { session: clean, modified } = window.RaceWarsSessionStore.sanitizeSession(session);
         session = clean;
@@ -651,6 +698,22 @@ ${gxCoords.join('\n')}
           window.RaceWarsSessionStore.save(session).catch(() => {});
         }
       }
+
+      // Si la sesión no tiene puntos en memoria, consultar si el NativeTracker tiene puntos registrados
+      if ((!session?.trackpoints || session.trackpoints.length === 0) && window.Capacitor?.Plugins?.NativeTracker?.getRecordedPoints) {
+        try {
+          const nativeRes = await window.Capacitor.Plugins.NativeTracker.getRecordedPoints();
+          if (nativeRes && Array.isArray(nativeRes.points) && nativeRes.points.length > 0) {
+            session.trackpoints = nativeRes.points;
+            if (window.RaceWarsSessionStore) {
+              window.RaceWarsSessionStore.save(session).catch(() => {});
+            }
+          }
+        } catch (e) {
+          console.warn('[GpxShareModal] Error obteniendo puntos nativos:', e);
+        }
+      }
+
       this.currentSession = session;
       this._cachedGpx = '';
       this._cachedKml = '';

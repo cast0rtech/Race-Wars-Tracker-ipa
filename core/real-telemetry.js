@@ -67,7 +67,73 @@
 
       // Inicializar WakeLock y Sensores
       this._requestWakeLock();
+      this._initNativeTracker();
       this.startHardwareGps();
+    }
+
+    /**
+     * Conecta con el plugin nativo NativeTracker (CLLocationManager en segundo plano)
+     */
+    async _initNativeTracker() {
+      if (window.Capacitor?.Plugins?.NativeTracker) {
+        try {
+          if (typeof window.Capacitor.Plugins.NativeTracker.addListener === 'function') {
+            await window.Capacitor.Plugins.NativeTracker.addListener('pointRecorded', (point) => {
+              this._handleNativePoint(point);
+            });
+            console.log('[Telemetry] Listener pointRecorded de NativeTracker configurado.');
+          }
+        } catch (e) {
+          console.warn('[Telemetry] Error configurando listener de NativeTracker:', e);
+        }
+      }
+    }
+
+    _handleNativePoint(point) {
+      if (!point) return;
+      const lat = point.lat !== undefined ? Number(point.lat) : Number(point.latitude);
+      const lng = point.lng !== undefined ? Number(point.lng) : (point.lon !== undefined ? Number(point.lon) : Number(point.longitude));
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+      this.gpsConnected = true;
+      this.gpsAvailable = true;
+      this.lastFixTimestamp = Date.now();
+      this.isSpeedEstimated = false;
+
+      const spdKmh = Number(point.speedKmh) || 0;
+      this.currentSpeedKmh = Math.round(spdKmh);
+      if (this.currentSpeedKmh > this.maxSpeedKmh && this.currentSpeedKmh <= 350) {
+        this.maxSpeedKmh = this.currentSpeedKmh;
+      }
+
+      if (point.altitude != null || point.altitudeM != null) {
+        this.currentAltitudeMeters = Math.round(point.altitude ?? point.altitudeM);
+        this.altitudeAvailable = true;
+      }
+
+      if (this.isRecording) {
+        const last = this.trackpoints[this.trackpoints.length - 1];
+        const ts = point.timestamp || Date.now();
+        if (!last || Math.abs(ts - last.timestamp) >= 300) {
+          this.trackpoints.push({
+            timestamp: ts,
+            lat: lat,
+            lng: lng,
+            latitude: lat,
+            longitude: lng,
+            speedKmh: this.currentSpeedKmh,
+            speed: this.currentSpeedKmh / 3.6,
+            altitudeM: this.altitudeAvailable ? this.currentAltitudeMeters : null,
+            altitude: this.altitudeAvailable ? this.currentAltitudeMeters : null,
+            accuracyM: point.horizontalAccuracy || 5,
+            horizontalAccuracy: point.horizontalAccuracy || 5
+          });
+        }
+      }
+
+      this.lastPosition = { lat, lng, timestamp: point.timestamp || Date.now(), accuracy: point.horizontalAccuracy || 5 };
+      this._notifyStatus(`GPS NATIVO ACTIVO`, 'active');
+      this._dispatchUpdate();
     }
 
     /**
@@ -192,12 +258,12 @@
       // Límites físicos de telemetría de automoción
       const MAX_REALISTIC_SPEED_KMH = 350; // Techo físico absoluto para vehículos terrestres
       const MAX_ACCEL_KMH_PER_SEC = 55;   // ~15.3 m/s² (aceleración máxima absoluta de hiperdeportivo)
-      const MAX_REASONABLE_ACCURACY_M = 45; // Filtrar triangulaciones pobres (torres celulares / Wi-Fi)
+      const MAX_REASONABLE_ACCURACY_M = 150; // Ampliar a 150m (siguiendo Open GPX Tracker para no descartar fixes válidos en vehículo)
       const MIN_DT_DIFF_SPEED_S = 0.4;    // Intervalo temporal mínimo para derivadas espaciales
 
       const isAccuracyValid = accuracy !== null && accuracy >= 0 && accuracy <= MAX_REASONABLE_ACCURACY_M;
 
-      // Si la precisión está degradada (> 45m), tratar como pérdida de señal útil: acotar a máx 80 km/h
+      // Si la precisión es extremadamente pobre (> 150m), tratar como pérdida de señal útil: acotar a máx 80 km/h
       if (!isAccuracyValid) {
         if (this.currentSpeedKmh > this.MAX_ASSUMED_SPEED_WITHOUT_GPS_KMH) {
           this.currentSpeedKmh = this.MAX_ASSUMED_SPEED_WITHOUT_GPS_KMH;
@@ -327,14 +393,19 @@
           }
         }
 
-        // Guardar trackpoint limpio
+        // Guardar trackpoint limpio con compatibilidad total (lat/lng y latitude/longitude)
         this.trackpoints.push({
           timestamp: timestamp,
           lat: lat,
           lng: lng,
+          latitude: lat,
+          longitude: lng,
           speedKmh: this.currentSpeedKmh,
+          speed: this.currentSpeedKmh / 3.6,
           altitudeM: rawAlt !== null ? this.currentAltitudeMeters : null,
-          accuracyM: accuracy
+          altitude: rawAlt !== null ? this.currentAltitudeMeters : null,
+          accuracyM: accuracy,
+          horizontalAccuracy: accuracy
         });
       } else if (this.isRecording && this.trackpoints.length === 0 && isAccuracyValid) {
         // Primer punto de origen
@@ -342,9 +413,14 @@
           timestamp: timestamp,
           lat: lat,
           lng: lng,
+          latitude: lat,
+          longitude: lng,
           speedKmh: this.currentSpeedKmh,
+          speed: this.currentSpeedKmh / 3.6,
           altitudeM: rawAlt !== null ? this.currentAltitudeMeters : null,
-          accuracyM: accuracy
+          altitude: rawAlt !== null ? this.currentAltitudeMeters : null,
+          accuracyM: accuracy,
+          horizontalAccuracy: accuracy
         });
       }
 
@@ -399,6 +475,15 @@
       this.elevationLossMeters = 0;
       this.maxSpeedKmh = this.currentSpeedKmh;
 
+      // Iniciar sesión nativa de fondo si está en iOS con NativeTracker
+      if (window.Capacitor?.Plugins?.NativeTracker?.startRecording) {
+        window.Capacitor.Plugins.NativeTracker.startRecording().then(res => {
+          console.log('[Telemetry] NativeTracker iniciado en segundo plano:', res);
+        }).catch(err => {
+          console.warn('[Telemetry] Aviso iniciando NativeTracker:', err);
+        });
+      }
+
       // Seed the route with the most recent real fix so the first recorded segment
       // starts at the user's location instead of one GPS interval later.
       if (this.lastPosition) {
@@ -406,8 +491,14 @@
           timestamp: this.lastPosition.timestamp,
           lat: this.lastPosition.lat,
           lng: this.lastPosition.lng,
+          latitude: this.lastPosition.lat,
+          longitude: this.lastPosition.lng,
           speedKmh: this.currentSpeedKmh,
-          altitudeM: this.altitudeAvailable ? this.currentAltitudeMeters : null
+          speed: this.currentSpeedKmh / 3.6,
+          altitudeM: this.altitudeAvailable ? this.currentAltitudeMeters : null,
+          altitude: this.altitudeAvailable ? this.currentAltitudeMeters : null,
+          accuracyM: this.lastPosition.accuracy || 5,
+          horizontalAccuracy: this.lastPosition.accuracy || 5
         });
       }
 
@@ -477,6 +568,32 @@
       if (this.checkpointInterval) {
         clearInterval(this.checkpointInterval);
         this.checkpointInterval = null;
+      }
+
+      // Detener sesión nativa y recuperar todos los puntos registrados en segundo plano
+      if (window.Capacitor?.Plugins?.NativeTracker?.stopRecording) {
+        try {
+          const nativeRes = await window.Capacitor.Plugins.NativeTracker.stopRecording();
+          if (nativeRes && Array.isArray(nativeRes.points) && nativeRes.points.length > 0) {
+            console.log(`[Telemetry] ${nativeRes.points.length} puntos recuperados desde NativeTracker`);
+            if (nativeRes.points.length >= this.trackpoints.length) {
+              this.trackpoints = nativeRes.points;
+            } else {
+              const existingTimes = new Set(this.trackpoints.map(p => Math.round((p.timestamp || 0) / 1000)));
+              for (const np of nativeRes.points) {
+                if (!existingTimes.has(Math.round((np.timestamp || 0) / 1000))) {
+                  this.trackpoints.push(np);
+                }
+              }
+              this.trackpoints.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            }
+            if (nativeRes.totalDistanceMeters && nativeRes.totalDistanceMeters > 0) {
+              this.totalDistanceKm = Math.max(this.totalDistanceKm, nativeRes.totalDistanceMeters / 1000);
+            }
+          }
+        } catch (err) {
+          console.warn('[Telemetry] Error deteniendo NativeTracker:', err);
+        }
       }
 
       // Guardar sesión en almacenamiento local para la pantalla de Resumen

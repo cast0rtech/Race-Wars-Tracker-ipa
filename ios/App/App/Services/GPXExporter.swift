@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(UIKit)
 import UIKit
+#endif
 
 // MARK: - GPX Export Errors
 public enum GPXExportError: LocalizedError, Equatable {
@@ -265,6 +267,7 @@ public final class GPXExporter {
 
     // MARK: - UIActivityViewController Share Sheet
     
+    #if canImport(UIKit)
     /// Crea el UIActivityViewController nativo de iOS para AirDrop, Mail, Archivos, Strava, etc.
     @MainActor
     public func createShareSheet(fileURL: URL) -> UIActivityViewController {
@@ -274,6 +277,7 @@ public final class GPXExporter {
         )
         return activityVC
     }
+    #endif
 }
 
 // MARK: - XML Parser Delegate para Validación Sintáctica
